@@ -1,0 +1,16 @@
+---
+vpc_public_subnets:
+  - availability_zone: eu-west-1a
+    cidr_block: 10.0.0.0/26
+  - availability_zone: eu-west-1b
+    cidr_block: 10.0.0.64/26
+  - availability_zone: eu-west-1c
+    cidr_block: 10.0.0.128/26
+
+subnets:
+  - az:          us-east-1b
+    subnet_type: public
+    cidr_block:  10.0.31.0/26
+
+key_name: louisgarman
+instance_type: t2.small

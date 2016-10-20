@@ -1,0 +1,14 @@
+dev:
+  regions: 
+    - eu-west-1
+staging:
+  regions: 
+    - eu-west-1
+prod:
+  regions: 
+    - eu-west-1
+
+subnets:
+  - az:          us-east-1a
+    subnet_type: public
+    cidr_block:  10.0.30.0/26

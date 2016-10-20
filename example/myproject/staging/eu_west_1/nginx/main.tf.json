@@ -1,0 +1,92 @@
+{
+  "resource": {
+    "aws_instance": {
+      "nginx": {
+        "instance_type": "t2.nano",
+        "vpc_security_group_ids": [
+          "${module..aws_security_group.instance.id}"
+        ],
+        "ami": null,
+        "key_name": "louisgarman",
+        "tags": {
+          "Name": "myproject-nginx-prod",
+          "Role": "nginx",
+          "Environment": "prod"
+        }
+      }
+    },
+    "aws_security_group": {
+      "instance": {
+        "name": "nginx-prod",
+        "description": "Security group for the nginx instance",
+        "vpc_id": "${module.vpc.aws_vpc.main.id}"
+      },
+      "elb": {
+        "name": "myproject-prod-nginx-elb",
+        "vpc_id": "${module.vpc.aws_vpc.main.id}",
+        "description": "Security group for elb of the nginx cluster"
+      }
+    },
+    "aws_security_group_rule": {
+      "instance_http_from_elb": {
+        "type": "ingress",
+        "security_group_id": "${module.nginx.aws_security_group.instance.id}",
+        "source_security_group_id": "${module.nginx.aws_security_group.elb.id}",
+        "from_port": 80,
+        "to_port": 80,
+        "protocol": "tcp"
+      },
+      "instance_ssh_from_bastion": {
+        "type": "ingress",
+        "security_group_id": "${module.nginx.aws_security_group.instance.id}",
+        "source_security_group_id": "${module.bastion.aws_security_group.bastion.id}",
+        "from_port": 22,
+        "to_port": 22,
+        "protocol": "tcp"
+      },
+      "elb_http_from_public": {
+        "type": "ingress",
+        "security_group": "${module.nginx.aws_security_group.elb.id}",
+        "cidr_blocks": [
+          "0.0.0.0/0"
+        ],
+        "from_port": 80,
+        "to_port": 80,
+        "protocol": "tcp"
+      },
+      "elb_http_to_instance": {
+        "type": "egress",
+        "security_group": "${module.nginx.aws_security_group.elb.id}",
+        "source_security_group_id": "${module.nginx.aws_security_group.instance.id}",
+        "from_port": 80,
+        "to_port": 80,
+        "protocol": "tcp"
+      }
+    },
+    "aws_elb": {
+      "nginx": {
+        "name": "myproject-prod-nginx",
+        "subnets": [
+          "${module.vpc.aws_subnet.public_eu-west-1a.id}",
+          "${module.vpc.aws_subnet.public_eu-west-1b.id}",
+          "${module.vpc.aws_subnet.public_eu-west-1c.id}"
+        ],
+        "cross_zone_load_balancing": true,
+        "connection_draining": true,
+        "internal": false,
+        "security_groups": [
+          "${module.nginx.aws_security_group.elb.id}"
+        ],
+        "tags": {
+          "Name": "myproject-prod-nginx",
+          "Project": "myproject",
+          "Env": "prod",
+          "Role": "nginx"
+        },
+        "listener": null,
+        "health_check": null,
+        "lifecycle": null
+      }
+    }
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "modules": {
+    "vpc": {
+      "source": "./vpc"
+    },
+    "bastion": {
+      "source": "./bastion"
+    },
+    "nginx": {
+      "source": "./nginx"
+    }
+  }
+}

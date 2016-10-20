@@ -1,0 +1,15 @@
+---
+:backends:
+  - yaml
+
+:hierarchy:
+  - '%{project}/%{env}/%{region}'
+  - '%{project}/%{env}/%{module_name}'
+  - '%{project}/%{env}/common'
+  - '%{project}/common'
+  - common
+
+:yaml:
+  :datadir: ./hieradata
+
+:logger: noop

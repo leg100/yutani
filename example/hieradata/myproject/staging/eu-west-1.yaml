@@ -1,0 +1,22 @@
+---
+cidr_block: 10.0.0.0/22
+
+subnets:
+  - az:          eu-west-1a
+    type: public
+    cidr_block:  10.0.0.0/26
+  - az:          eu-west-1b
+    type: public
+    cidr_block:  10.0.64.0/26
+  - az:          eu-west-1c
+    type: public
+    cidr_block:  10.0.128.0/26
+  - az:          eu-west-1a
+    type: private
+    cidr_block:  10.0.1.0/24
+  - az:          eu-west-1b
+    type: private
+    cidr_block:  10.0.2.0/24
+  - az:          eu-west-1c
+    type: private
+    cidr_block:  10.0.3.0/24
