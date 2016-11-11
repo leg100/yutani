@@ -4,13 +4,13 @@ mod :vpc do
     cidr_block           hiera(:cidr_block)
     tags                 ({
       Name:              [scope[:project], scope[:env]].join('-'),
-      Environment:       scope[:env]
+      Environment:       env
     })
   end
 
   hiera(:subnets).map do |net|
-    resource :aws_subnet, [net[:type], net[:az]].join('_') do
-      vpc_id                  resources[:aws_vpc][:main].id
+    resource :aws_subnet, "%{type}_%{az}" % net do
+      vpc_id                  "${aws_vpc.main.id}"
       cidr_block              net[:cidr_block]
       availability_zone       net[:az]
       map_public_ip_on_launch (net[:type] == 'public')

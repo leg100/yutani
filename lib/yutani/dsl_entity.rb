@@ -5,6 +5,7 @@ module Yutani
     attr_accessor :scope
 
     def hiera(k)
+      # puts "hiera(%s)" % k.inspect
       # hiera expect strings, not symbols
       hiera_scope = @scope.inject({}){|h,(k,v)| h[k.to_s] = v.to_s; h}
       v = Yutani.hiera.lookup(k.to_s, nil, hiera_scope)

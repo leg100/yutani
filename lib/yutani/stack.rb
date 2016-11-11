@@ -1,24 +1,14 @@
 module Yutani
-  class Stack < DSLEntity
-    attr_accessor :name, :modules
+  # a stack is a terraform module with
+  # additional properties:
+  # * module name is hardcoded to 'root'
+  # * can only be found at top-level (it's an error if found within another stack/module)
+  # * because it's the top-level module, it's immediately evaluated
+  # * ability to configure remote state
+  class Stack < Mod
 
-    def initialize(name=nil, **scope, &block)
-      @modules = {}
- 
-      @scope = HashWithIndifferentAccess.new(scope)
-      @scope[:stack_name] = name.to_s unless name.nil?
-
-      instance_exec(self, &block) if block_given?
-    end
-
-    def include_mod(name)
-      @modules[name] = Yutani.modules[name]
-      @modules[name].eval!(self.scope)
-    end
-
-    # we'll use scope to uniquely identify the stack 
-    def key
-      scope
+    def initialize(**scope, &block)
+      super(:root, [], scope, &block)
     end
 
     def dir_segments
@@ -30,7 +20,11 @@ module Yutani
     end
 
     def path
-      File.join(dir_segments)
+      "root"
     end
+
+    #def path
+    #  File.join(dir_segments)
+    #end
   end
 end

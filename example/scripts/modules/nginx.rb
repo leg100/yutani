@@ -1,9 +1,7 @@
 mod :nginx do
   resource :aws_instance, :nginx do
     instance_type          hiera(:instance_type)
-    vpc_security_group_ids [
-      resources[:aws_security_group][:instance].id
-    ]
+    vpc_security_group_ids [ ref('aws_security_group.instance.id') ]
     ami                    hiera(:ami)
     key_name               hiera(:key_name)
     tags                   ({
@@ -16,13 +14,13 @@ mod :nginx do
   resource :aws_security_group, :instance do
     name        [scope[:module_name], scope[:env]].join('-')
     description "Security group for the nginx instance"
-    vpc_id      modules[:vpc].resources[:aws_vpc][:main].id
+    vpc_id      ref(:vpc, 'aws_vpc.main.id')
   end
 
   resource :aws_security_group_rule, :instance_http_from_elb do
     type                     'ingress'
-    security_group_id        resources[:aws_security_group][:instance].id
-    source_security_group_id resources[:aws_security_group][:elb].id
+    security_group_id        ref('aws_security_group.instance.id')
+    source_security_group_id ref('aws_security_group.elb.id')
     from_port                80
     to_port                  80
     protocol                 'tcp'
@@ -30,8 +28,8 @@ mod :nginx do
 
   resource :aws_security_group_rule, :instance_ssh_from_bastion do
     type                     'ingress'
-    security_group_id        resources[:aws_security_group][:instance].id
-    source_security_group_id modules[:bastion].resources[:aws_security_group][:bastion].id
+    security_group_id        ref('aws_security_group.instance.id')
+    source_security_group_id ref(:bastion, 'aws_security_group.bastion.id')
     from_port                22
     to_port                  22
     protocol                 'tcp'
@@ -39,11 +37,11 @@ mod :nginx do
 
   resource :aws_elb, :nginx do
     name                      [scope[:project], scope[:env], scope[:module_name]].join('-')
-    subnets                   modules[:vpc].resources[:aws_subnet].values.map(&:id).grep(/public/)
+    subnets                   ref(:vpc, /aws_subnet.public_*.id/)
     cross_zone_load_balancing true
     connection_draining       true
     internal                  false
-    security_groups           [resources[:aws_security_group][:elb].id]
+    security_groups           [ ref('aws_security_group.elb.id') ]
 
     tags                      ({
       Name:                   [scope[:project], scope[:env], scope[:module_name]].join('-'),
@@ -74,14 +72,14 @@ mod :nginx do
 
   resource :aws_security_group, :elb do
     name        [scope[:project], scope[:env], scope[:module_name], 'elb'].join('-')
-    vpc_id      modules[:vpc].resources[:aws_vpc][:main].id
+    vpc_id      ref(:vpc, 'aws_vpc.main.id')
     description "Security group for elb of the nginx cluster"
   end
 
   # public ingress to elb
   resource :aws_security_group_rule, :elb_http_from_public do
     type           'ingress'
-    security_group resources[:aws_security_group][:elb].id
+    security_group ref('aws_security_group.elb.id')
     cidr_blocks    ['0.0.0.0/0']
     from_port      80
     to_port        80
@@ -91,8 +89,8 @@ mod :nginx do
   # egress to instance
   resource :aws_security_group_rule, :elb_http_to_instance do
     type                     'egress'
-    security_group           resources[:aws_security_group][:elb].id
-    source_security_group_id resources[:aws_security_group][:instance].id
+    security_group           ref('aws_security_group.elb.id')
+    source_security_group_id ref('aws_security_group.instance.id')
     from_port                80
     to_port                  80
     protocol                 'tcp'
