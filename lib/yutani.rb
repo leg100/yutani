@@ -11,7 +11,7 @@ module Yutani
   @modules = {}
 
   class << self
-    attr_accessor :hiera, :modules, :dir_strategy, :logger
+    attr_accessor :hiera, :modules, :logger
   end
 
   # block is mandatory
@@ -33,18 +33,5 @@ module Yutani
     Yutani.hiera = Hiera.new(:config => config)
     Yutani.logger = Logger.new(STDERR)
     Yutani.logger.level = log_level
-  end
-
-  def dir_strategy=(strategy)
-    name + scope.values
-    Yutani.dir_strategy = stragey
-  end
-
-  def dir_strategy(name, scope)
-  end
-
-  def set_dir_strategy(name, &block)
-    Yutani.dir_strategy[name] = block
-    name + scope.values
   end
 end
