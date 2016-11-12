@@ -7,24 +7,12 @@ module Yutani
   # * ability to configure remote state
   class Stack < Mod
 
-    def initialize(**scope, &block)
-      super(:root, [], scope, &block)
+    def initialize(name, **scope, &block)
+      super(name, [], scope, {stack_name: name}, &block)
     end
 
-    def dir_segments
-      scope.values.flatten.compact.map{|d| d.to_s.gsub('-', '_') }
-    end
-
-    def to_s
-      dir_segments.join('_')
-    end
-
-    def path
+    def mod_path
       "root"
     end
-
-    #def path
-    #  File.join(dir_segments)
-    #end
   end
 end

@@ -11,9 +11,9 @@ require_relative './modules/nginx'
 %w[dev staging prod].each do |env|
   # could 'stack' be 'mod'?
   # - one would have to explicitly trigger evaluation phase
-  stack project: 'myproject', env: env, region: 'eu-west-1' do
+  stack :myproject, env: env, region: 'eu-west-1' do
     mod :vpc
     mod :bastion
     mod :nginx
-  end.debug
+  end.tar!
 end

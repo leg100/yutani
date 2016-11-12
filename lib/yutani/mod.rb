@@ -20,20 +20,22 @@ module Yutani
   # * optional scope of type hash
   # * ability to output a tar of its contents
   class Mod < DSLEntity
-    attr_accessor :name, :resources, :block, :mods
+    attr_accessor :name, :resources, :block, :mods, :params
 
-    def initialize(name, ancestors = [], **scope, &block)
-      @name = name
-      @ancestors = ancestors
+    def initialize(name, ancestors = [], local_scope, parent_scope, &block)
+      @name                = name
+      @ancestors           = ancestors
 
-      @scope = scope
+      @scope               = parent_scope.merge(local_scope)
       @scope[:module_name] = name
+      @local_scope         = local_scope
 
-      @mods = []
-      @resources = []
-      @outputs = []
+      @mods                = []
+      @resources           = []
+      @outputs             = {}
+      @params              = {}
 
-      instance_eval &block 
+      instance_eval        &block
     end
 
     def mod(name, **scope, &block)
@@ -42,10 +44,9 @@ module Yutani
       # if no block or scope, look up reference
       scope, block = lookup_mod_ref(name) if scope.empty? and block.nil?
 
-      merged_scope = @scope.merge(scope)
       ancestors = [@name] + @ancestors
 
-      @mods << Mod.new(name, ancestors, **merged_scope, &block)
+      @mods << Mod.new(name, ancestors, scope, @scope, &block)
     end
 
     def lookup_mod_ref(name)
@@ -71,54 +72,70 @@ module Yutani
     end
 
     def debug
-      pp self.to_h
+      pp @mods.unshift(self).map{|m| m.to_h }
     end
 
+    # this generates the contents of *.tf.main
     def to_h
       { 
-        path: path,
-        modules: @mods.map {|m|
-          m.to_h
+        module: @mods.inject({}) {|modules,m|
+          modules[m.tf_name] = {}
+          modules[m.tf_name][:source] = m.dir_path
+          modules[m.tf_name] = m.params
+          modules
         },
-        resources: @resources.inject(MyHash.new){|resources,r|
+        resource: @resources.inject(MyHash.new){|resources,r|
           resources.deep_merge(r.to_h)
+        },
+        outputs: @outputs.inject({}){|outputs,(k,v)|
+          outputs[k] = { value: v }
+          outputs
         }
       }
     end
 
-    def path
-      File.join(@ancestors.map(&:to_s), @name.to_s)
+    def tf_name
+      dirs = @local_scope.values.map{|v| v.to_s.gsub('-', '_') }
+      dirs.unshift(name)
+      dirs.join('_')
+    end
+
+    def dir_path
+      tf_name
     end
 
     def resource(resource_type, identifiers, **scope, &block)
       merged_scope = @scope.merge(scope)
-      @resources << Resource.new(resource_type, identifiers, merged_scope, &block)
+      @resources <<
+        Resource.new(resource_type, identifiers, merged_scope, &block)
     end
 
+    def pretty_json
+      JSON.pretty_generate(to_h)
+    end
+
+    # pretty DSL alias
     def tar!
+      create_tar_file!
+    end
+
+    def create_tar_file!
       Gem::Package::TarWriter.new(STDOUT) do |tar|
-        tar.mkdir s.path, '0755'
+        tar_files('/', tar)
+      end
+    end
 
-        stack_file_path = File.join(s.path, 'main.tf.json')
-        stack_file_hash = {}
-        stack_file_hash['modules'] = s.modules.inject({}){|h,(name,mod)|
-          h[name] = {source: mod.path};h
-        }
-        stack_file_contents = JSON.pretty_generate(stack_file_hash)
-        tar.add_file_simple(stack_file_path, '0644',
-                            stack_file_contents.bytes.length) {|f|
-          f.write stack_file_contents
-        }
+    def tar_files(prefix, io)
+      full_dir_path = File.join(prefix, dir_path)
+      main_tf_path = File.join(full_dir_path, 'main.tf.json')
 
-        s.modules.each do |_,m|
-          tar.mkdir File.join(s.path, m.path), '0755'
-          mod_file_contents = JSON.pretty_generate(m.to_h)
-          mod_file_path = File.join(s.path, m.path, 'main.tf.json')
-          tar.add_file_simple(mod_file_path, '0644', 
-                              mod_file_contents.bytes.length) {|f|
-            f.write mod_file_contents
-          }
-        end
+      io.mkdir full_dir_path, '0755'
+      io.add_file_simple(main_tf_path, '0644', pretty_json.bytes.size) {|f|
+        f.write pretty_json
+      }
+
+      mods.each do |m|
+        m.tar_files(full_dir_path, io)
       end
     end
   end

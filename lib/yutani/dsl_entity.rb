@@ -8,6 +8,7 @@ module Yutani
       # puts "hiera(%s)" % k.inspect
       # hiera expect strings, not symbols
       hiera_scope = @scope.inject({}){|h,(k,v)| h[k.to_s] = v.to_s; h}
+      Yutani.logger.debug "hiera scope: %s" % hiera_scope
       v = Yutani.hiera.lookup(k.to_s, nil, hiera_scope)
       # let us use symbols for hash keys
       convert(v)

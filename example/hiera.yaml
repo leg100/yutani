@@ -3,10 +3,10 @@
   - yaml
 
 :hierarchy:
-  - '%{project}/%{env}/%{region}'
-  - '%{project}/%{env}/%{module_name}'
-  - '%{project}/%{env}/common'
-  - '%{project}/common'
+  - '%{stack_name}/%{env}/%{region}'
+  - '%{stack_name}/%{env}/%{module_name}'
+  - '%{stack_name}/%{env}/common'
+  - '%{stack_name}/common'
   - common
 
 :yaml:
