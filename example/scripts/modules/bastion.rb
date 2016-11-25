@@ -11,7 +11,7 @@ mod :bastion do
 
   resource :aws_security_group_rule, :bastion do
     type              'ingress'
-    security_group_id ref('aws_security_group.bastion.id')
+    security_group_id "${aws_security_group.bastion.id}"
     cidr_blocks       hiera(:allowable_ip_ranges)
     from_port         22
     to_port           22
@@ -20,7 +20,7 @@ mod :bastion do
 
   resource :aws_instance, :bastion do
     instance_type          hiera(:instance_type)
-    vpc_security_group_ids [ ref('aws_security_group.bastion.id') ]
+    vpc_security_group_ids [ "${aws_security_group.bastion.id}" ]
     ami                    hiera(:ami)
     key_name               hiera(:key_name)
     tags                   ({

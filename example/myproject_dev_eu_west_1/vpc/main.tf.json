@@ -1,76 +1,95 @@
 {
+  "module": {
+  },
   "resource": {
     "aws_vpc": {
       "main": {
         "enable_dns_hostnames": true,
         "cidr_block": "10.0.0.0/22",
+        "env": null,
         "tags": {
-          "Name": "myproject-prod",
-          "Environment": "prod"
+          "Name": "-dev",
+          "Environment": null
         }
       }
     },
     "aws_subnet": {
       "public_eu-west-1a": {
-        "vpc_id": "${module.vpc.aws_vpc.main.id}",
+        "vpc_id": "${aws_vpc.main.id}",
         "cidr_block": "10.0.0.0/26",
         "availability_zone": "eu-west-1a",
         "map_public_ip_on_launch": true,
         "tags": {
-          "Name": "myproject-prod-eu-west-1a",
-          "Environment": "prod"
+          "Name": "-dev-eu-west-1a",
+          "Environment": "dev"
         }
       },
       "public_eu-west-1b": {
-        "vpc_id": "${module.vpc.aws_vpc.main.id}",
+        "vpc_id": "${aws_vpc.main.id}",
         "cidr_block": "10.0.64.0/26",
         "availability_zone": "eu-west-1b",
         "map_public_ip_on_launch": true,
         "tags": {
-          "Name": "myproject-prod-eu-west-1b",
-          "Environment": "prod"
+          "Name": "-dev-eu-west-1b",
+          "Environment": "dev"
         }
       },
       "public_eu-west-1c": {
-        "vpc_id": "${module.vpc.aws_vpc.main.id}",
+        "vpc_id": "${aws_vpc.main.id}",
         "cidr_block": "10.0.128.0/26",
         "availability_zone": "eu-west-1c",
         "map_public_ip_on_launch": true,
         "tags": {
-          "Name": "myproject-prod-eu-west-1c",
-          "Environment": "prod"
+          "Name": "-dev-eu-west-1c",
+          "Environment": "dev"
         }
       },
       "private_eu-west-1a": {
-        "vpc_id": "${module.vpc.aws_vpc.main.id}",
+        "vpc_id": "${aws_vpc.main.id}",
         "cidr_block": "10.0.1.0/24",
         "availability_zone": "eu-west-1a",
         "map_public_ip_on_launch": false,
         "tags": {
-          "Name": "myproject-prod-eu-west-1a",
-          "Environment": "prod"
+          "Name": "-dev-eu-west-1a",
+          "Environment": "dev"
         }
       },
       "private_eu-west-1b": {
-        "vpc_id": "${module.vpc.aws_vpc.main.id}",
+        "vpc_id": "${aws_vpc.main.id}",
         "cidr_block": "10.0.2.0/24",
         "availability_zone": "eu-west-1b",
         "map_public_ip_on_launch": false,
         "tags": {
-          "Name": "myproject-prod-eu-west-1b",
-          "Environment": "prod"
+          "Name": "-dev-eu-west-1b",
+          "Environment": "dev"
         }
       },
       "private_eu-west-1c": {
-        "vpc_id": "${module.vpc.aws_vpc.main.id}",
+        "vpc_id": "${aws_vpc.main.id}",
         "cidr_block": "10.0.3.0/24",
         "availability_zone": "eu-west-1c",
         "map_public_ip_on_launch": false,
         "tags": {
-          "Name": "myproject-prod-eu-west-1c",
-          "Environment": "prod"
+          "Name": "-dev-eu-west-1c",
+          "Environment": "dev"
         }
       }
     }
+  },
+  "output": {
+    "aws_vpc.main.id": {
+      "value": "${var.aws_vpc.main.id}"
+    },
+    "aws_subnet.public_eu-west-1a.id": {
+      "value": "${var.aws_subnet.public_eu-west-1a.id}"
+    },
+    "aws_subnet.public_eu-west-1b.id": {
+      "value": "${var.aws_subnet.public_eu-west-1b.id}"
+    },
+    "aws_subnet.public_eu-west-1c.id": {
+      "value": "${var.aws_subnet.public_eu-west-1c.id}"
+    }
+  },
+  "variables": {
   }
 }
