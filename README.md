@@ -1,4 +1,4 @@
-# yutani
+![logo](./yutani_logo.png)
 
 A ruby library/DSL for generating directory structures of Terraform JSON.
 
@@ -38,6 +38,18 @@ Modules are optional. A resource can be specified:w
 
 ## Resources
 
+### Terraform
+
+* Every stack is an object of type Stack; and has many modules
+* Every module is an object of type Module; and has many resources
+* Every resource is an object of type Resource; and has many attributes
+
+### Ansible
+
+* Every playbook is an object of type Playbook
+* Every task is an object of type Task
+
+
 * A resource has at the very least a resource type specified as a ruby symbol. 
 * If a name isn't specified, then the module name is used. When there is more than one instance of a resource type in a module, an error will be raised.
 * A name is specified with an array. The elements will be concatenated with an underscore to generate the terraform name. The elements can be symbols or strings, or hashes.
@@ -59,3 +71,7 @@ A Module object maps to a Terraform module. As well as supporting all th usual s
 ## Stack
 
 A Stack object generates a directory of configuration files and/or  directories of local modules.
+
+## Dependencies
+
+Terraform dependencies 

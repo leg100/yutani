@@ -8,11 +8,15 @@ module Yutani
   class Stack < Mod
 
     def initialize(name, **scope, &block)
-      super(name, [], scope, {stack_name: name}, &block)
+      super(name, self, scope, {stack_name: name}, &block)
     end
 
-    def mod_path
-      "root"
+    def path
+      "/root"
+    end
+
+    def [](name)
+      descendents.find{|d| d.name == name}
     end
   end
 end
