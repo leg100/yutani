@@ -1,4 +1,4 @@
-![logo](./yutani_logo.png)
+Yutani
 
 A ruby library/DSL for generating directory structures of Terraform JSON.
 
