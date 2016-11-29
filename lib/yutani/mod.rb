@@ -2,7 +2,6 @@ require 'json'
 require 'rubygems/package'
 require 'hashie'
 require 'pp'
-require 'docile'
 
 module Yutani
   # Maps to a terraform module. Named 'mod' to avoid confusion with 
