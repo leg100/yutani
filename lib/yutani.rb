@@ -3,6 +3,7 @@ require 'hashie'
 require 'logger'
 require 'yutani/dsl_entity'
 require 'yutani/reference'
+require 'yutani/directory_tree'
 require 'yutani/mod'
 require 'yutani/stack'
 require 'yutani/resource'
@@ -14,6 +15,9 @@ module Yutani
   class << self
     attr_accessor :hiera, :modules, :logger
   end
+
+  @logger = Logger.new(STDERR)
+  @logger.level = Logger::INFO
 
   # block is mandatory
   # top-level module; not within stack
@@ -30,9 +34,7 @@ module Yutani
     Stack.new(name, **scope, &block)
   end
 
-  def configure(config: 'hiera.yaml', log_level: Logger::DEBUG)
+  def configure(config: 'hiera.yaml')
     Yutani.hiera = Hiera.new(:config => config)
-    Yutani.logger = Logger.new(STDERR)
-    Yutani.logger.level = log_level
   end
 end

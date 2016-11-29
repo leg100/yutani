@@ -14,9 +14,6 @@ module Yutani
       instance_eval &block if block_given?
     end
 
-    alias_method :type, :resource_type
-    alias_method :name, :resource_name
-
     def []=(k,v)
       @fields[k] = v
     end
@@ -52,7 +49,7 @@ module Yutani
 
     def method_missing(name, *args, &block)
       if block_given?
-        sub = SubResource.new
+        sub = SubResource.new(scope)
         sub.instance_exec(&block)
         @fields[name] = sub.fields
       else
@@ -62,10 +59,11 @@ module Yutani
   end
 
   class SubResource < Resource 
-    attr_reader :fields
-
-    def initialize
+    def initialize(scope)
+      @scope  = scope
       @fields = {}
     end
   end
+
+  ResourceAttribute = Struct.new(:type, :name, :attr)
 end

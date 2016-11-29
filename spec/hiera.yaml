@@ -1,0 +1,11 @@
+---
+:backends:
+  - yaml
+
+:hierarchy:
+  - common
+
+:yaml:
+  :datadir: ./spec/hieradata
+
+:logger: noop

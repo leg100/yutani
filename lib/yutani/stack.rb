@@ -8,7 +8,7 @@ module Yutani
   class Stack < Mod
 
     def initialize(name, **scope, &block)
-      super(name, self, scope, {stack_name: name}, &block)
+      super(name, nil, scope, {stack_name: name}, &block)
     end
 
     def path

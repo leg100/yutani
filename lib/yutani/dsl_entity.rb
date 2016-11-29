@@ -5,11 +5,13 @@ module Yutani
     attr_accessor :scope
 
     def hiera(k)
-      # puts "hiera(%s)" % k.inspect
-      # hiera expect strings, not symbols
+      # hiera expects strings, not symbols
       hiera_scope = @scope.inject({}){|h,(k,v)| h[k.to_s] = v.to_s; h}
       Yutani.logger.debug "hiera scope: %s" % hiera_scope
+
       v = Yutani.hiera.lookup(k.to_s, nil, hiera_scope)
+      Yutani.logger.warn "hiera couldn't find value for key #{k}" if v.nil?
+
       # let us use symbols for hash keys
       convert(v)
     end

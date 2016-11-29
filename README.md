@@ -75,3 +75,8 @@ A Stack object generates a directory of configuration files and/or  directories 
 ## Dependencies
 
 Terraform dependencies 
+
+# Notes
+
+* blocks and hashes can be used interchangely for sub-resources
+* {} and ({}) for property values, represent blocks and hashes respectively

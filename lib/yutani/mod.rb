@@ -3,7 +3,6 @@ require 'rubygems/package'
 require 'hashie'
 require 'pp'
 require 'docile'
-require 'pathname'
 
 module Yutani
   # Maps to a terraform module. Named 'mod' to avoid confusion with 
@@ -47,6 +46,14 @@ module Yutani
       @mods << Mod.new(name, self, scope, @scope, &block)
     end
 
+    def resources_hash
+      @resources.inject({}) do |r_hash, r|
+        r_hash[r.resource_type] ||= {}
+        r_hash[r.resource_type][r.resource_name] = r 
+        r_hash
+      end
+    end
+
     def lookup_mod_ref(name)
       raise "mod #{name} not defined" unless Yutani.modules.key? name
       
@@ -64,7 +71,7 @@ module Yutani
 
     # this generates the contents of *.tf.main
     def to_h
-      { 
+      h = { 
         module: @mods.inject({}) {|modules,m|
           modules[m.tf_name] = {}
           modules[m.tf_name][:source] = m.dir_path
@@ -78,11 +85,14 @@ module Yutani
           outputs[k] = { value: v }
           outputs
         },
-        variables: @variables.inject({}){|variables,(k,v)|
+        variable: @variables.inject({}){|variables,(k,v)|
           variables[k] = {}
           variables
         }
       }
+
+      # terraform doesn't like empty output and variable collections
+      h.delete_if {|_,v| v.empty? }
     end
 
     def tf_name
@@ -130,39 +140,59 @@ module Yutani
       File.join(@parent.path, name.to_s)
     end
 
+    class InvalidReferencePathException < StandardError; end
+
     # rel_path: relative path to a target mod
     # ret an array of mods tracing that path 
     # sorted from target -> source
     # mods: array of module objects, which after being built is returned
     # path: array of path strings: i.e. [.. .. .. a b c]
+
     def generate_pathway(mods, path)
-      if path.empty?
+      curr = path.shift
+
+      case curr
+      when /[a-z]+/
+        child = child_by_name(curr)
+        if child.nil?
+          raise InvalidReferencePathException, "no such module #{curr}" 
+        else
+          child.generate_pathway(mods.unshift(self), path)
+        end
+      when '..'
+        if @parent.nil?
+          raise InvalidReferencePathException, "no such module #{curr}" 
+        else
+          @parent.generate_pathway(mods.unshift(self), path)
+        end
+      when nil
         return mods.unshift(self)
-      elsif path.first == '..'
-        path.shift
-        @parent.generate_pathway(mods.unshift(self), path)
       else
-        child_by_name(path.shift).generate_pathway(mods.unshift(self), path)
+        raise InvalidReferencePathException, "invalid path component: #{curr}" 
       end
     end
 
     # recursive linked-list function, propagating a variable
     # from a target module to a source module
-    def propagate(prev, nxt, *params)
+    # seed var with array of [type,name,attr]
+    def propagate(prev, nxt, var)
       if prev.empty?
         # we are the source module
         if nxt.empty?
           # src and target in same mod
-          "${%s}" % params.join('.')
+          "${%s}" % var.join('.')
         else
           if self.child? nxt.first
             # there is no 'composition' mod,
-            # just move to nex mod
-            nxt.shift.propagate(prev.push(self), nxt, *params)
+            new_var = [self.name, var].flatten
+            nxt.first.params[new_var.join('_')] = "${%s}" % new_var.join('.')
+            nxt.first.variables[new_var] = ''
+
+            nxt.shift.propagate(prev.push(self), nxt, var)
           elsif self.parent?(nxt.first)
             # we are propagating upward the variable
-            self.outputs[params.join('.')] = "${%s}" % params.join('.')
-            nxt.shift.propagate(prev.push(self), nxt, *params)
+            self.outputs[var.join('_')] = "${%s}" % var.join('.')
+            nxt.shift.propagate(prev.push(self), nxt, var.join('_'))
           else
             raise "Propagation error!"
           end
@@ -172,12 +202,10 @@ module Yutani
           # we're the source module
           if self.child? prev.last
             # it's been propagated 'up' to us
-            "${module.%s}" % params.join('.')
+            "${module.%s.%s}" % [prev.last.name, var]
           elsif self.parent? prev.last
             # it's been propagated 'down' to us
-            self.params[params.join('.')] = "${var.%s}" % params.join('.')
-            self.variables[params.join('.')] = ""
-            "${var.%s}" % params.join('.')
+            "${var.%s}" % var
           else
             raise "Propagation error!"
           end
@@ -185,31 +213,27 @@ module Yutani
           if self.child? prev.last and self.child? nxt.first
             # we're a 'composition' module; the common ancestor
             # to source and target modules
-            params.unshift(prev.last.name)
-            # we should probably be setting params on the next module
-            # but then what would the next mod do?
-            nxt.shift.propagate(prev.push(self), nxt, *params)
+            new_var = [prev.last.name, var]
+            nxt.first.params[new_var.join('_')] = "${module.%s.%s}" % new_var
+            nxt.first.variables[new_var.join('_')] = ""
+
+            nxt.shift.propagate(prev.push(self), nxt, new_var.join('_'))
           elsif self.child? prev.last and self.parent? nxt.first
             # we're propagating 'upward' the variable
             # towards the common ancestor
-            output_value = ['module', params.unshift(prev.last.name)].join('.')
-            self.outputs[params.join('.')] = "${%s}" % output_value
-            nxt.shift.propagate(prev.push(self), nxt, *params)
+            
+            new_var = [prev.last.name, var]
+            self.outputs[new_var.join('_')] = "${module.%s.%s}" % new_var
+
+            nxt.shift.propagate(prev.push(self), nxt, new_var.join('_'))
           elsif self.parent? prev.last and self.parent? nxt.first
             # we cannot be a child to two parents in a tree!
             raise "Progation error!"
           elsif self.parent? prev.last and self.child? nxt.first
-            if prev[-2] and prev.last.child? prev[-2]
-              # we are the module after the 'composition' module,
-              # on downward slope
-              self.params[params.join('.')] = "${module.%s}" % params.join('.')
-            else
-              # we're propagating 'downward' the variable 
-              # towards the source module
-              self.params[params.join('.')] = "${var.%s}" % params.join('.')
-            end
-            self.variables[params.join('.')] = ""
-            nxt.shift.propagate(prev.push(self), nxt, *params)
+            nxt.first.params[var] = "${var.%s}" % var
+            nxt.first.variables[var] = ""
+
+            nxt.shift.propagate(prev.push(self), nxt, var)
           else
             raise "Propagation error!"
           end
@@ -223,17 +247,25 @@ module Yutani
 
           matching_resources = []
 
-          target_path = Pathname.new(ref.path)
-          source_path = Pathname.new(self.path)
-          relative_path = target_path.relative_path_from(source_path)
-          mod_path = generate_pathway([], relative_path.to_s.split('/'))
+          path_components = ref.relative_path(self).split('/')
+          mod_path = generate_pathway([], path_components)
+          target_mod = mod_path.shift
  
           # lookup matching resources in mod_path.first
-          matches = ref.find_matching_resources_in_module!(mod_path.first).map do |res|
-            params = [res.type, res.name, ref.attr]
-            mod_path.shift.propagate([], mod_path, *params)
+          matches = ref.find_matching_resources_in_module!(target_mod)
+
+          if matches.empty?
+            raise ReferenceException, 
+              "no matching resources found in mod #{target_mod.name}"
           end
-          matches.length == 1 ? matches[0] : matches
+
+          interpolation_strings = matches.map do |res|
+            ra = ResourceAttribute.new(res.resource_type, res.resource_name, ref.attr)
+            # clone mod_path, because propagate() will alter it
+            target_mod.propagate([], mod_path.clone, [ra.type, ra.name, ra.attr])
+          end
+          interpolation_strings.length == 1 ? interpolation_strings[0] : 
+            interpolation_strings
         end
       end
 
@@ -242,32 +274,41 @@ module Yutani
       end
     end
 
-    # pretty DSL alias
-    def tar!
-      create_tar_file!
-    end
-
-    def create_tar_file!
+    def tar(filename)
       # ideally, this needs to be done automatically as part of to_h
-      resolve_references!(self)
+      resolve_references!
 
-      Gem::Package::TarWriter.new(STDOUT) do |tar|
-        tar_files('/', tar)
+      File.open(filename, 'w+') do |tarball|
+        create_dir_tree('./').to_tar(tarball)
       end
     end
 
-    def tar_files(prefix, io)
-      full_dir_path = File.join(prefix, dir_path)
+    def to_fs(prefix='./terraform')
+      # ideally, this needs to be done automatically as part of to_h
+      resolve_references!
+
+      create_dir_tree(prefix).to_fs
+    end
+
+    def create_dir_tree(prefix)
+      dir_tree(DirectoryTree.new(prefix), '')
+    end
+
+    def dir_tree(dt, prefix)
+      full_dir_path = File.join(prefix, self.dir_path)
       main_tf_path = File.join(full_dir_path, 'main.tf.json')
 
-      io.mkdir full_dir_path, '0755'
-      io.add_file_simple(main_tf_path, '0644', pretty_json.bytes.size) {|f|
-        f.write pretty_json
-      }
+      dt.add_file(
+        main_tf_path,
+        0644,
+        self.pretty_json
+      )
 
       mods.each do |m|
-        m.tar_files(full_dir_path, io)
+        m.dir_tree(dt, full_dir_path)
       end
+
+      dt
     end
   end
 end

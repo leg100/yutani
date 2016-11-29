@@ -1,15 +1,21 @@
+require 'pathname'
+
 module Yutani
   class Reference
 
-    def initialize(m='.', t, n, a)
-      @m = m
-      @t = t
-      @n = n
-      @a = a
+    attr_reader :path
+
+    def initialize(path='.', t, n, a)
+      @path       = path
+      @t          = t
+      @n          = n
+      @a          = a
     end
 
-    def path
-      @m
+    def relative_path(source_mod)
+      source_path = Pathname.new(source_mod.path)
+      target_path = Pathname.new(@path)
+      target_path.relative_path_from(source_path).to_s
     end
 
     def resource_type
@@ -32,7 +38,7 @@ module Yutani
         if resource.resource_type == self.resource_type.to_sym
           case self.resource_name
           when Regexp
-            if resource.resource_name =~ self.resource_name.to_sym
+            if resource.resource_name =~ self.resource_name
               resolutions.push(resource)
             end
           when Symbol
