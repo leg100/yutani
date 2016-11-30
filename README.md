@@ -1,35 +1,29 @@
 # Yutani
 
-A ruby library/DSL for generating directory structures of Terraform JSON.
+A Ruby DSL for generating Terraform code.
 
 ## Principles
 
-* Yutani eschews Terraform variables in favour of interpolation of ruby variables at compile time (DSL to JSON). Terraform variables have one advantage: you can inject sensitive information you'd rather not have stored in plaintext in the JSON files.
+* Yutani eschews Terraform variables in favour of querying Hiera. Terraform variables have one advantage: you can inject sensitive information you'd rather not have stored in plaintext in the JSON files.
 * Terraform modules are not generally reusable. HCL limits their flexibility. They do have one advantage: they permit one to 'target' logical groups of multiple resources at plan/apply time. They're retained for that reason alone.
 
-# Naming
-
-A systematic approach is used to name various objects.
-
-## Project
-
-The project object is the highest level scope. The first parameter sets the project name. This sets the scope variable `project_name`. The optional second parameter is a hash, which sets further scope variables. The project object generates a directory at the root of the directory structure.
 
 ## Stack
 
-The stack object sits within a project. The stack maps to a Terraform 'stack', the directory from which one would run terraform commands. It takes one parameter, a hash, which sets the scope. Each successive value generates a nested subdirectory, rooted beneath the project directory i.e.
+Maps to a Terraform stack, the directory from which you'd run commands like `terraform plan` and `terraform apply`. It takes two parameters: a name, and a hash, which sets the Hiera scope. For example:
 
 ```ruby
-project :myproject {
-  stack env: 'dev', region: 'eu-west-1' 
-}
+stack :mystack, env: 'dev', region: 'eu-west-1' do
+env
 ```
 
-would generate the directory `./myproject/dev/eu-west-1`
+Sets the stack name to `:mystack`, and sets the Hiera scope to `{env: 'dev', region: 'eu-west-1'}`.
 
 ## Modules
 
-Because of the clash with ruby module keyword, `mod` is used instead. This object maps to a Terraform module, generating a reference to the module. Any source is supported, however this object is at its most powerful when used to generate a local directory of resources (the "local file path" source type). These resources are specified within the block passed to the module.
+Maps to a terraform module. `stack` is a module too, mapping to the `root` module in Terraform. Child modules can be created within a stack. Because of the clash with the ruby `module` keyword, `mod` is used instead. 
+
+This object maps to a Terraform module, generating a reference to the module. Any source is supported, however this object is at its most powerful when used to generate a local directory of resources (the "local file path" source type). These resources are specified within the block passed to the module.
 
 Modules are optional. A resource can be specified:w
 
@@ -79,4 +73,4 @@ Terraform dependencies
 # Notes
 
 * blocks and hashes can be used interchangely for sub-resources
-* {} and ({}) for property values, represent blocks and hashes respectively
+* `{}` and `({})` for property values, represent blocks and hashes respectively
