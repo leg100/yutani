@@ -8,3 +8,4 @@ group :test do
   gem 'rspec-mocks'
   gem 'guard-rspec'
 end
+gem 'aruba', '~> 0.14.2'

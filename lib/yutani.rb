@@ -1,6 +1,8 @@
 require 'hiera'
 require 'hashie'
 require 'logger'
+require 'yutani/version'
+require 'yutani/cli'
 require 'yutani/dsl_entity'
 require 'yutani/reference'
 require 'yutani/directory_tree'
