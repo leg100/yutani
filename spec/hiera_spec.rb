@@ -6,7 +6,7 @@ Yutani.configure(config: 'spec/hiera.yaml')
 
 describe Mod do
   before do 
-    @stack = stack :s1 do
+    @stack = Yutani.stack :s1 do
       resource :rtype, :rnameA do
         propZ hiera(:foo)
       end

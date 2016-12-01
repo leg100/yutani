@@ -39,10 +39,15 @@ module Yutani
     end
 
     def mod(name, **scope, &block)
-      # if no block or scope, look up reference
-      scope, block = lookup_mod_ref(name) if scope.empty? and block.nil?
 
       @mods << Mod.new(name, self, scope, @scope, &block)
+    end
+
+    def source(path)
+      absolute_path = File.expand_path(path, File.dirname(Yutani.entry_path))
+      contents = File.read absolute_path
+
+      instance_eval contents, path
     end
 
     def resources_hash
@@ -51,12 +56,6 @@ module Yutani
         r_hash[r.resource_type][r.resource_name] = r 
         r_hash
       end
-    end
-
-    def lookup_mod_ref(name)
-      raise "mod #{name} not defined" unless Yutani.modules.key? name
-      
-      Yutani.modules[name].values
     end
 
     def debug

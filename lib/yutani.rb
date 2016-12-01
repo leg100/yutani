@@ -12,31 +12,35 @@ require 'yutani/resource'
 
 module Yutani
 
-  @modules = {}
+  @stacks = []
 
   class << self
-    attr_accessor :hiera, :modules, :logger
+    attr_accessor :hiera, :stacks, :logger, :entry_path
   end
 
   @logger = Logger.new(STDERR)
   @logger.level = Logger::INFO
 
-  # block is mandatory
-  # top-level module; not within stack
-  # therefore it is not evaluated, but added
-  # to global hash
-  def mod(name, **scope, &block)
-    raise "Must provide block to module #{name}" unless block_given?
+  class << self
+    def stack(name, **scope, &block)
+      s = Stack.new(name, **scope, &block)
+      Yutani.stacks << s
+      s
+    end
 
-    Yutani.modules[name] = {scope: scope, block: block}
-  end
+    def configure(config: 'hiera.yaml')
+      Yutani.hiera = Hiera.new(:config => config)
+    end
 
-  # a special module that gets evaluated immedi.
-  def stack(name, **scope, &block)
-    Stack.new(name, **scope, &block)
-  end
+    def build_from_file(file)
+      Yutani.configure(config: File.join(File.dirname(file), 'hiera.yaml'))
+      Yutani.entry_path = file
 
-  def configure(config: 'hiera.yaml')
-    Yutani.hiera = Hiera.new(:config => config)
+      instance_eval(File.read(file), file)
+
+      unless stacks.empty?
+        stacks.each {|s| s.to_fs}
+      end
+    end
   end
 end

@@ -1,10 +1,8 @@
 require 'yutani'
 
-include Yutani
-
 describe Mod do
   before do 
-    @stack = stack :s1 do
+    @stack = Yutani.stack :s1 do
       mod :m1 do
         mod :m2 do
           mod :m3 do
@@ -27,7 +25,7 @@ describe Mod do
       end
     end
 
-    @small_stack = stack :s1 do
+    @small_stack = Yutani.stack :s1 do
       mod :m1 do
         resource :target_type, :target_name do
           propX scope[:stack_name]
