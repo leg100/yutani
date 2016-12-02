@@ -1,5 +1,4 @@
 require 'json'
-require 'rubygems/package'
 require 'hashie'
 require 'pp'
 
@@ -19,7 +18,7 @@ module Yutani
   # * optional scope of type hash
   # * ability to output a tar of its contents
   class Mod < DSLEntity
-    attr_accessor :name, :resources, :block, :mods, :params, :outputs, :variables
+    attr_accessor :name, :resources, :providers, :block, :mods, :params, :outputs, :variables
 
     def initialize(name, parent, local_scope, parent_scope, &block)
       @name                = name.to_sym
@@ -31,6 +30,7 @@ module Yutani
 
       @mods                = []
       @resources           = []
+      @providers           = []
       @outputs             = {}
       @params              = {}
       @variables           = {}
@@ -79,6 +79,9 @@ module Yutani
         resource: @resources.inject(MyHash.new){|resources,r|
           resources.deep_merge(r.to_h)
         },
+        provider: @providers.inject(MyHash.new){|providers,r|
+          providers.deep_merge(r.to_h)
+        },
         output: @outputs.inject({}){|outputs,(k,v)|
           outputs[k] = { value: v }
           outputs
@@ -107,6 +110,12 @@ module Yutani
       merged_scope = @scope.merge(scope)
       @resources <<
         Resource.new(resource_type, identifiers, merged_scope, &block)
+    end
+
+    def provider(provider_name, **scope, &block)
+      merged_scope = @scope.merge(scope)
+      @providers <<
+        Provider.new(provider_name, merged_scope, &block)
     end
 
     def pretty_json

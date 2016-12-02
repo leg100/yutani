@@ -3,6 +3,9 @@ require 'yutani'
 describe Mod do
   before do 
     @stack = Yutani.stack :s1 do
+      provider :aws do
+        region 'eu-west-1'
+      end
       mod :m1 do
         mod :m2 do
           mod :m3 do
@@ -53,6 +56,11 @@ describe Mod do
     r = @stack[:m3].resources_hash[:target_type][:target_name]
     expect(r.fields[:propX]).to eq :s1
     expect(r.fields[:propY]).to eq :m3
+  end
+
+  it "has a provider" do
+    aws_provider = @stack.providers.first
+    expect(aws_provider.fields[:region]).to eq "eu-west-1"
   end
 
   it "generates correct pathway" do

@@ -11,6 +11,7 @@ require 'yutani/directory_tree'
 require 'yutani/mod'
 require 'yutani/stack'
 require 'yutani/resource'
+require 'yutani/provider'
 require 'yutani/utils'
 
 module Yutani
