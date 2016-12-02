@@ -1,5 +1,7 @@
 module Yutani
   class Config < Hash
+    CONFIG_FILE = '.yutani.yml'
+
     # Strings rather than symbols are used for compatibility with YAML.
     DEFAULTS = Config[{
       "terraform_dir" => "terraform",
@@ -7,10 +9,26 @@ module Yutani
         :backends  => ["yaml"],
         :hierarchy => ["common"],
         :yaml      => {
-          :datadir=>"./hiera"
+          :datadir=>"hiera"
         },
         :logger    => "noop"
       }
     }]
+
+    class << self
+      # Returns a Configuration filled with defaults and fixed for common
+      # problems and backwards-compatibility.
+      def from(user_config)
+        DEFAULTS.merge Config[user_config]
+      end
+    end
+
+    def read_config_file
+      if File.exists? CONFIG_FILE
+        YAML.load_file(CONFIG_FILE)
+      else
+        {}
+      end
+    end
   end
 end

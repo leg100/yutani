@@ -1,11 +1,9 @@
 require 'yutani'
 
-include Yutani
-
-Yutani.configure(config: 'spec/hiera.yaml')
-
 describe Mod do
   before do 
+    Yutani::Hiera.hiera('hiera_config_file' => 'spec/hiera.yaml')
+
     @stack = Yutani.stack :s1 do
       resource :rtype, :rnameA do
         propZ hiera(:foo)

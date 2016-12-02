@@ -30,12 +30,21 @@ module Yutani
     desc 'init', 'Initialize with a basic setup'
     def init
       if File.exists? '.yutani.yml'
-        puts ".yutani.yml already exists, not overwriting"
+        puts ".yutani.yml already exists, skipping initialization"
       else
         File.open('.yutani.yml', 'w+') do |f|
           f.write Yutani::Config::DEFAULTS.to_yaml(indent: 2)
+          puts ".yutani.yml created"
         end
-        puts ".yutani.yml created"
+
+        hiera_dir = Yutani::Config::DEFAULTS['hiera_config'][:yaml][:datadir]
+        FileUtils.mkdir hiera_dir unless Dir.exists? hiera_dir
+
+        common_yml = File.join(hiera_dir, 'common.yaml')
+        unless File.exists? common_yml
+          File.new(common_yml, 'w+')
+          puts "#{common_yml} created"
+        end
       end
     end
 
