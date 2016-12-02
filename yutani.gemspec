@@ -9,7 +9,7 @@ Gem::Specification.new do |s|
   s.date                  = '2016-11-29'
   s.summary               = "Terraform DSL"
   s.description           = "Generates JSON for Terraform"
-  s.required_ruby_version = ['~> 2.3', '>= 2.3.0']
+  s.required_ruby_version = ['~> 2.3', '>= 2.3.1']
   s.authors               = ["Louis Garman"]
   s.email                 = 'louisgarman+yutani@gmail.com'
   s.files                 = Dir['bin/*', 'lib/**/*.rb']
