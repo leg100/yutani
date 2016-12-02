@@ -3,9 +3,7 @@ require 'tmpdir'
 require 'tempfile'
 require 'rubygems/package'
 
-include Yutani
-
-describe DirectoryTree do
+describe Yutani::DirectoryTree do
   before do 
     @paths = %w[
       a.rb
@@ -14,7 +12,7 @@ describe DirectoryTree do
     ]
 
     Dir.mktmpdir do |prefix|
-      @dt = DirectoryTree.new(prefix) 
+      @dt = Yutani::DirectoryTree.new(prefix) 
 
       @paths.each{|p| @dt.add_file(p, 0644, '{}')}
     end

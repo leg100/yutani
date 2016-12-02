@@ -1,6 +1,6 @@
 require 'yutani'
 
-describe Mod do
+describe Yutani::Mod do
   before do 
     @stack = Yutani.stack :s1 do
       provider :aws do
@@ -45,7 +45,7 @@ describe Mod do
   end
 
   it "stack contains grandchild module" do
-    expect(@stack[:m2]).to be_instance_of Mod
+    expect(@stack[:m2]).to be_instance_of Yutani::Mod
   end
 
   it "stack contains five modules" do
@@ -71,7 +71,7 @@ describe Mod do
 
   it "propagates variables from module to module" do
     hops = %i(m3 m2 m1 m4 m5).map{|m|  @stack[m]}
-    ra = ResourceAttribute.new(:aws_type, :my_name, :id)
+    ra = Yutani::ResourceAttribute.new(:aws_type, :my_name, :id)
     target = hops.shift
     target.propagate([], hops, [ra.type, ra.name, ra.attr])
 
@@ -94,7 +94,7 @@ describe Mod do
 
   it "propagates variables from module to module in small stack" do
     hops = [@small_stack[:m1], @small_stack, @small_stack[:m2]]
-    ra = ResourceAttribute.new(:aws_type, :my_name, :id)
+    ra = Yutani::ResourceAttribute.new(:aws_type, :my_name, :id)
     target = hops.shift
     target.propagate([], hops, [ra.type, ra.name, ra.attr])
 

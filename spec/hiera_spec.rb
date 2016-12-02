@@ -1,6 +1,6 @@
 require 'yutani'
 
-describe Mod do
+describe Yutani::Mod do
   before do 
     Yutani::Hiera.hiera('hiera_config_file' => 'spec/hiera.yaml')
 
