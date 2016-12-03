@@ -1,5 +1,7 @@
 # Yutani
 
+[![Build Status](https://travis-ci.org/leg100/yutani.svg?branch=master)](https://travis-ci.org/leg100/yutani)
+
 A Ruby DSL for generating Terraform code.
 
 ## Principles
