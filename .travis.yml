@@ -1,6 +1,8 @@
 language: ruby
 before_script:
   - curl -O https://releases.hashicorp.com/terraform/0.7.13/terraform_0.7.13_linux_amd64.zip
-  - unzip terraform_0.7.13_linux_amd64.zip
+  - mkdir -p bin
+  - unzip -d bin terraform_0.7.13_linux_amd64.zip
+  - export PATH=$PWD/bin:$PATH
 script:
   - bundle exec rspec
