@@ -1,5 +1,7 @@
 require 'thor'
 require 'yaml'
+require 'guard'
+require 'guard/commander'
 
 module Yutani
   class Cli < Thor
@@ -20,6 +22,24 @@ module Yutani
     desc 'build', 'Evaluates the given script and creates terraform files'
     def build(script)
       Yutani.build_from_file(script)
+    end
+
+    # we need to know these things:
+    # * the directory to restrict to watching for changes
+    # * the script that build should evaluate 
+    # * the glob  - this is hardcoded to *.rb
+    desc 'watch', 'Run build upon changes to files/directories'
+    def watch(script, script_dir)
+			guardfile = <<-EOF
+run_build = proc do
+  system("yutani build #{script}")
+end
+
+guard :yield, { :run_on_modifications => run_build } do
+  watch(%r|^.*\.rb$|)
+end
+EOF
+      Guard.start(guardfile_contents: guardfile, watchdir: script_dir, debug: true)
     end
 
     desc 'version', 'Prints the current version of Yutani'
@@ -49,13 +69,6 @@ module Yutani
     end
 
     private
-
-    def options
-      original_options = super
-      return original_options unless File.file?(".yutani.yml")
-      defaults = ::YAML::load_file(".yutani.yml") || {}
-      defaults.merge(original_options)
-    end
 
     def self.format_backtrace(bt)
       "Backtrace: #{bt.join("\n   from ")}"

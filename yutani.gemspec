@@ -23,6 +23,8 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'hashie', '~> 3.4.3', '>= 3.4.3'
   s.add_runtime_dependency 'hiera', '~> 3.2', '>= 3.2.1'
   s.add_runtime_dependency 'thor', '~> 0.19.1'
+  s.add_runtime_dependency 'guard', '~> 2.14.0'
+  s.add_runtime_dependency 'guard-yield'
 
   s.add_development_dependency 'rake'
   s.add_development_dependency 'aruba', '~> 0.14.2'
