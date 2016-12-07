@@ -10,8 +10,9 @@ describe Yutani::Mod do
         mod :m2 do
           mod :m3 do
             resource :target_type, :target_name do
-              propX scope[:stack_name]
-              propY scope[:module_name]
+              propX    scope[:stack_name]
+              propY    scope[:module_name]
+              _timeout 60
             end
             resource :target_type, :target_name_2 do; end
             resource :target_type, :three do; end
@@ -56,6 +57,11 @@ describe Yutani::Mod do
     r = @stack[:m3].resources_hash[:target_type][:target_name]
     expect(r.fields[:propX]).to eq :s1
     expect(r.fields[:propY]).to eq :m3
+  end
+
+  it "removes leading underscore from property name" do
+    r = @stack[:m3].resources_hash[:target_type][:target_name]
+    expect(r.fields[:timeout]).to eq 60
   end
 
   it "has a provider" do

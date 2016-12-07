@@ -52,7 +52,12 @@ module Yutani
         sub.instance_exec(&block)
         @fields[name] = sub.fields
       else
-        @fields[name] = args.first
+        # remove leading '_' if present.
+        # DSL users have to do prefix with underscore when they want to use
+        # a resource property that has same name as an existing ruby method
+        # i.e. 'timeout'
+        sans_underscore = name.to_s.sub(/^_/, '').to_sym
+        @fields[sans_underscore] = args.first
       end
     end
   end

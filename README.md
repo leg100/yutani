@@ -76,3 +76,4 @@ Terraform dependencies
 
 * blocks and hashes can be used interchangely for sub-resources
 * `{}` and `({})` for property values, represent blocks and hashes respectively
+* Resource property names can clash with ruby method names, i.e. `timeout 60` in an `aws_elb`'s health check will actually call Object.timeout in ruby. To get around this, prefix the name with an underscore, i.e. `_timeout 60`, and Yutani will remove the underscore after evaluation. (This is to do with Yutani relying on something called `method_missing` in ruby, whereby all unknown method calls are instead coverted to resource property names. This won't work alas in the case just talked about!).
