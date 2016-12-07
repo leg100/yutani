@@ -1,8 +1,14 @@
 language: ruby
 before_script:
-  - curl -O https://releases.hashicorp.com/terraform/0.7.13/terraform_0.7.13_linux_amd64.zip
-  - mkdir -p bin
-  - unzip -d bin terraform_0.7.13_linux_amd64.zip
-  - export PATH=$PWD/bin:$PATH
+- curl -O https://releases.hashicorp.com/terraform/0.7.13/terraform_0.7.13_linux_amd64.zip
+- mkdir -p bin
+- unzip -d bin terraform_0.7.13_linux_amd64.zip
+- export PATH=$PWD/bin:$PATH
 script:
-  - bundle exec rspec
+- bundle exec rspec
+deploy:
+  provider: rubygems
+  api_key:
+    secure: ORQVk7pNpOxBNck95uESBvdG1uh6cZjzcfPP00OtRAsl65tbxTlEymzLmBXeUpZcVAezsy+zE2O3338UEB2/bfW4Dp47rZiIxtvV0sQayMRN7N0uixk/aqXzSn8PmGV3fLMzD1y+w2YcDxaIzPRUHY8srpi2if3WHgcyZs/kBc7te09Za3oKOlTsFzewM7fEt1RMxw1ZT00REJlp9HKyOUBZajcQfYY4M5+8AwqNrrqekp0dRyd0H12pHHajDk2K/bfXF4BUrQicxla5wVWkvk/j0PJR/W/WCRhTRj7PDAqwndIdXgrBuso298SyJw7w7kCQpD288AjGxb9Ag9El4Qq4AWMC5ylc8xQHY8JCf4BxupuSKnS4LPcfUUlND4PAajELc4rfKEvu6Gwg9ZzICysCFz2RKsY8PBBweofcnLAIwnUbr/3/etR1xR8D0YWD2P9UHHNeyA3jSbUNAouXGc1bp7s9zSzFHKbA0qXrpp6mUCEliqnHtEWAqTgFYjU5BMiQ1E6JSIu+nflsdW3N9bg3oHeu6iqZHFhPYoZgqf2ik+N9zJN0Wf86FQWi2z4SwtSMyd6l6q0k4QBnTQc1+dAJTpGJ5Y1TiS/HhEa/sB8ybXJ8szxpJutRvjr19+op6j2+i3lW5zPSZmTOYh6LKgHSC4fLhG9j7yKBMXhMOSY=
+  on:
+    tags: true
