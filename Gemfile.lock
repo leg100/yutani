@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    yutani (0.0.2)
+    yutani (0.0.3)
       activesupport (~> 5)
       guard (~> 2.14.0)
       guard-yield

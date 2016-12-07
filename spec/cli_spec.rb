@@ -3,7 +3,7 @@ RSpec.describe 'First Run', :type => :aruba do
   let(:hiera_dir) { 'hiera' }
 
   it "prints version" do 
-    expect(run("yutani -v")).to have_output '0.0.2'
+    expect(run("yutani -v")).to have_output Yutani::VERSION
   end
 
   it "initialises config file" do 
