@@ -58,3 +58,11 @@ module Yutani
     end
   end
 end
+
+# Although deprecated, the timeout stdlib in ruby 2.3.1 adds #timeout
+# to Object. At least one resource (aws_elb) has a property called
+# 'timeout', which, like all property names we'd like to be sent to method_missing,
+# but doesn't because of Object#timeout!
+# (Yutani itself doesn't actually need timeout, but there is a lib somewhere (?)
+# require'ing it, so it gets loaded)
+Object.send :remove_method, :timeout
