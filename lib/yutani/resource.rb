@@ -1,5 +1,3 @@
-require 'active_support/hash_with_indifferent_access'
-
 module Yutani
   class Resource < DSLEntity
     attr_accessor :resource_type, :resources, :fields, :mods, :resource_name
@@ -7,7 +5,7 @@ module Yutani
     def initialize(resource_type, resource_name, **scope, &block)
       @resource_type      = resource_type
       @resource_name      = resource_name
-      @scope              = HashWithIndifferentAccess.new(scope)
+      @scope              = scope
       @fields             = {}
 
       Docile.dsl_eval(self, &block) if block_given?

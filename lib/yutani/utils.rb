@@ -1,6 +1,14 @@
-require 'active_support/hash_with_indifferent_access'
+require 'hashie'
 
 module Yutani
+	class IndifferentHash < Hash
+		include Hashie::Extensions::IndifferentAccess
+	end
+
+	class DeepMergeHash < Hash
+		include Hashie::Extensions::DeepMerge
+	end
+
   module Utils
     class << self
       def convert_nested_hash_to_indifferent_access(v)
@@ -8,7 +16,7 @@ module Yutani
         when Array
           v.map{|i| convert_nested_hash_to_indifferent_access(i) }
         when Hash
-          HashWithIndifferentAccess.new(v)
+          IndifferentHash.new(v)
         else
           v
         end

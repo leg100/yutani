@@ -1,7 +1,6 @@
 require 'yutani'
 require 'tmpdir'
 require 'tempfile'
-require 'rubygems/package'
 
 describe Yutani::DirectoryTree do
   before do 

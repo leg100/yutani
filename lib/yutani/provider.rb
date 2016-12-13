@@ -1,15 +1,13 @@
-require 'active_support/hash_with_indifferent_access'
-
 module Yutani
   class Provider < DSLEntity
     attr_accessor :provider_name, :fields
 
     def initialize(provider_name, **scope, &block)
       @provider_name      = provider_name
-      @scope              = HashWithIndifferentAccess.new(scope)
+      @scope              = scope
       @fields             = {}
 
-      instance_eval &block if block_given?
+      Docile.dsl_eval(self, &block) if block_given?
     end
 
     def []=(k,v)
@@ -20,6 +18,10 @@ module Yutani
       {
         @provider_name => @fields
       }
+    end
+
+    def respond_to_missing?(method_name, include_private = false)
+      true
     end
 
     def method_missing(name, *args, &block)

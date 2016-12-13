@@ -1,3 +1,5 @@
+require 'hiera'
+
 module Yutani
   module Hiera
     class << self

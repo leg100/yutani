@@ -1,8 +1,3 @@
-require 'json'
-require 'set'
-require 'hashie'
-require 'pry'
-
 module Yutani
   class Scope
     def initialize(stack:, hiera_scope:, dimensions:, yielding:, &block)

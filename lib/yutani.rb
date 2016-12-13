@@ -1,7 +1,9 @@
-require 'hiera'
-require 'hashie'
+begin; require 'pry'; rescue LoadError; end
+
+require 'set'
 require 'logger'
 require 'docile'
+
 require 'yutani/version'
 require 'yutani/config'
 require 'yutani/hiera'

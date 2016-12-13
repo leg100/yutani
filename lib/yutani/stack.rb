@@ -1,15 +1,6 @@
 require 'json'
-require 'set'
-require 'hashie'
-require 'pry'
 
 module Yutani
-  # a stack is a terraform module with
-  # additional properties:
-  # * module name is hardcoded to 'root'
-  # * can only be found at top-level (it's an error if found within another stack/module)
-  # * because it's the top-level module, it's immediately evaluated
-  # * ability to configure remote state
   class Stack
     attr_accessor :name, :resources, :providers, :outputs, :variables
 
@@ -33,18 +24,14 @@ module Yutani
       @dimensions.join('_')
     end
 
-    class MyHash < Hash
-      include Hashie::Extensions::DeepMerge
-    end
-
     # this generates the contents of *.tf.main
     def to_h
       h = { 
-        resource: @resources.inject(MyHash.new){|resources,(_, r_id_hash)|
+        resource: @resources.inject(DeepMergeHash.new){|resources,(_, r_id_hash)|
           r_id_hash.values.each {|r| resources.deep_merge!(r.to_h) }
           resources
         },
-        provider: @providers.inject(MyHash.new){|providers,r|
+        provider: @providers.inject(DeepMergeHash.new){|providers,r|
           providers.deep_merge(r.to_h)
         },
         output: @outputs.inject({}){|outputs,(k,v)|
