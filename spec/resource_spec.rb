@@ -6,12 +6,12 @@ describe Yutani::Resource do
 
     @stack = Yutani.stack(:s1) {
       scope(:rnameA) {
-        resource(:rtype) {
+        resource(:rtype, :x, y: 'a') {
           propZ hiera(:foo)
         }
       }
     }
-    @resource_id = Set.new(%i[rnameA])
+    @resource_id = Set.new(%i[rnameA x a])
   end
 
   it "has a populated resources collection" do
