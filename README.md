@@ -135,6 +135,17 @@ stack(:mystack) {
 
 The `aws_subnet` resource would be named `public_eu_west_1a`. (Note: any hyphens are converted to underscores).
 
+### Includes
+
+You can include DSL code from other files:
+
+```ruby
+stack(:mystack) {
+	inc { './nginx.rb' }
+}
+```
+
+
 ## Style
 
 I've opted for using `{}` instead of `do; end` for the blocks in the examples. Either can of course be used, but I wanted to convey the similarity to HCL (which does use curly brackets).
