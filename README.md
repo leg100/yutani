@@ -123,7 +123,7 @@ The resource name is inherited from its scope, following these rules:
 
 For example:
 
-```
+```ruby
 stack(:mystack) {
 	scope(:public) {
 		scope(az: 'eu-west-1a') {
@@ -137,11 +137,11 @@ The `aws_subnet` resource would be named `public_eu_west_1a`. (Note: any hyphens
 
 ## Style
 
-I've opted for using `{}` instead of `do; end` for the blocks in the examples. Either can of course be used, but I wanted to convey the similarity to HCL, which uses curly brackets.
+I've opted for using `{}` instead of `do; end` for the blocks in the examples. Either can of course be used, but I wanted to convey the similarity to HCL (which does use curly brackets).
 
 ## Notes
 
-* Either blocks and hashes can be used for sub-resources (i.e. `tags` in `aws_instance`, or `listener` in `aws_elb`
+* Either blocks and hashes can be used for sub-resources (i.e. `tags` in `aws_instance`, or `listener` in `aws_elb`)
 * `{}` and `({})` for property values, represent blocks and hashes respectively
 * Makes heavy use of ruby's `method_missing`. Basically, Yutani knows nothing of which providers and resources are possible, it just converts the resource property names to methods, and passes the property values as parameters. While this means Yutani doesn't have to keep track of the continual changes to Terraform's resources, it does make it more brittle than I'd like. For instance, the resource `aws_security_group_rule` has a property called `self`, which is of course also a ruby keyword, and if it is defined in this way it will trigger an error. To get around this, pass a parameter to your resource block like so:
 
