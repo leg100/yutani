@@ -11,7 +11,7 @@ describe Yutani::Resource do
         }
       }
     }
-    @resource_id = Set.new(%i[s1 rnameA])
+    @resource_id = Set.new(%i[rnameA])
   end
 
   it "has a populated resources collection" do

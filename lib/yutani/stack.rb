@@ -13,48 +13,24 @@ module Yutani
   class Stack
     attr_accessor :name, :resources, :providers, :outputs, :variables
 
-    def initialize(*identifiers, **scope, &block)
+    def initialize(*identifiers, **hiera_scope, &block)
       @resources         = Hash.new{|h,k| h[k] = {}}
       @providers         = []
       @outputs           = {}
       @variables         = {}
-      @identifiers       = Set.new(identifiers.map(&:to_sym) + scope.values.map(&:to_sym))
-      @scope             = scope
+      @hiera_scope       = hiera_scope
 
-      Docile.dsl_eval(self, *@identifiers.to_a, &block)
+      @dimensions        = identifiers + hiera_scope.values
+
+      Scope.new(stack:       self,
+                hiera_scope: hiera_scope,
+                dimensions:  Set.new([]),
+                yielding:    @dimensions,
+                &block)
     end
 
     def name
-      @identifiers.to_a.join('_')
-    end
-
-    def inc(&block)
-      path = yield
-      eval File.read(path), block.binding, path
-    end
-
-    def scope(*identifiers, **scope, &block)
-      identifiers          += scope.values
-
-      ancestor_scope       = @scope
-      ancestor_identifiers = @identifiers
-
-      @scope.merge!(scope)
-      @identifiers += identifiers.map(&:to_sym)
-
-      yield *identifiers
-
-      @scope               = ancestor_scope
-      @identifiers         = ancestor_identifiers
-    end
-
-    def resource(resource_type, &block)
-      @resources[resource_type][@identifiers] =
-        Resource.new(resource_type, name, @scope, &block)
-    end
-
-    def provider(provider_name, &block)
-      @providers << Provider.new(provider_name, @scope, &block)
+      @dimensions.join('_')
     end
 
     class MyHash < Hash

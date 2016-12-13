@@ -35,7 +35,8 @@ describe Yutani::Stack do
         }
       }
     }
-    resource_id = Set.new(%i[x y m1 m4 m5 source_name])
+
+    resource_id = Set.new(%i[m1 m4 m5 source_name])
     @resource = @stack.resources[:source_type][resource_id]
   end
 
@@ -53,7 +54,7 @@ describe Yutani::Stack do
     @stack.resolve_references!
 
     expect(@resource.fields[:propB]).to eq(
-      "${target_type.x_y_m1_m2_m3_three.target_attr}"
+      "${target_type.m1_m2_m3_three.target_attr}"
     )
   end
 
@@ -61,8 +62,8 @@ describe Yutani::Stack do
     @stack.resolve_references!
 
     expect(@resource.fields[:propA]).to eq %w[
-      ${target_type.x_y_m1_m2_m3_target_name.target_attr}
-      ${target_type.x_y_m1_m2_m3_three.target_attr}
+      ${target_type.m1_m2_m3_target_name.target_attr}
+      ${target_type.m1_m2_m3_three.target_attr}
     ]
   end
 
@@ -70,7 +71,7 @@ describe Yutani::Stack do
     @stack.resolve_references!
 
     expect(@resource.fields[:propC][:subPropC]).to eq(
-      "${target_another_type.x_y_m1_m2_m3_target_name.target_attr}"
+      "${target_another_type.m1_m2_m3_target_name.target_attr}"
     )
   end
 

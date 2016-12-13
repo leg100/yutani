@@ -11,7 +11,7 @@ describe Yutani::Stack do
         }
       }
     }
-    @resource_id = Set.new(%i[s1 rnameA])
+    @resource_id = Set.new(%i[rnameA])
   end
 
   it "should resolve hiera variables correctly" do
