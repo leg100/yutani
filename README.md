@@ -2,78 +2,170 @@
 
 [![Build Status](https://travis-ci.org/leg100/yutani.svg?branch=master)](https://travis-ci.org/leg100/yutani)
 
-A Ruby DSL for generating Terraform code.
+## About
 
-## Principles
+Yutani - A ruby DSL for generating [Terraform](https://github.com/hashicorp/terraform/) configurations:
 
-* Yutani eschews Terraform variables in favour of querying Hiera. Terraform variables have one advantage: you can inject sensitive information you'd rather not have stored in plaintext in the JSON files.
-* Terraform modules are not generally reusable. HCL limits their flexibility. They do have one advantage: they permit one to 'target' logical groups of multiple resources at plan/apply time. They're retained for that reason alone.
+* Eschews Terraform variables in favour of querying [Hiera](https://github.com/puppetlabs/hiera)
+* Dismisses Terraform modules; everything is in a single 'root' module
+* Introduces the concept of scopes and dimensions
+* Permits targeting resources based on dimensions
+* Generates multiple configurations or 'stacks'
+* Generates JSON rather than HCL
 
 
-## Stack
+## Installation
 
-Maps to a Terraform stack, the directory from which you'd run commands like `terraform plan` and `terraform apply`. It takes two parameters: a name, and a hash, which sets the Hiera scope. For example:
+Ensure you have at least version 2.3.1 of ruby installed.
 
-```ruby
-stack :mystack, env: 'dev', region: 'eu-west-1' do
-env
+Install the gem:
+
+```sh
+gem install yutani
 ```
 
-Sets the stack name to `:mystack`, and sets the Hiera scope to `{env: 'dev', region: 'eu-west-1'}`.
+Initialise a directory structure and configuration file with defaults:
 
-## Modules
-
-Maps to a terraform module. `stack` is a module too, mapping to the `root` module in Terraform. Child modules can be created within a stack. Because of the clash with the ruby `module` keyword, `mod` is used instead. 
-
-This object maps to a Terraform module, generating a reference to the module. Any source is supported, however this object is at its most powerful when used to generate a local directory of resources (the "local file path" source type). These resources are specified within the block passed to the module.
-
-Modules are optional. A resource can be specified:w
+```sh
+yutani init
+```
 
 
-* Only one paramter can be passed to a module, and that is the name of the module. This can be a string or a symbol. This sets the scope variable `module_path`.
+## Examples
 
-## Resources
+The DSL bears a strong similarity to the Terraform HCL syntax:
 
-### Terraform
+```ruby
+stack(:nginx) {
+	resource(:aws_instance) {
+		ami           "ami-123123"
+		instance_type "t2.micro"
+		key_name      "my-ssh-key"
+	}
+}
+```
 
-* Every stack is an object of type Stack; and has many modules
-* Every module is an object of type Module; and has many resources
-* Every resource is an object of type Resource; and has many attributes
+produces `./terraform/nginx.tf`:
 
-### Ansible
+```hcl
+resource "aws_instance" "nginx" {
+	ami           = "ami-123123"
+	instance_type = "t2.micro"
+	key_name      = "my-ssh-key"
+}
+```
 
-* Every playbook is an object of type Playbook
-* Every task is an object of type Task
+Yutani integrates with [Hiera](https://github.com/puppetlabs/hiera). Variables can be looked up by key:
 
+```ruby
+stack(:nginx) {
+	resource(:aws_instance) {
+		ami           hiera(:ami)
+		instance_type "t2.micro"
+		key_name      "my-ssh-key"
+	}
+}
+```
 
-* A resource has at the very least a resource type specified as a ruby symbol. 
-* If a name isn't specified, then the module name is used. When there is more than one instance of a resource type in a module, an error will be raised.
-* A name is specified with an array. The elements will be concatenated with an underscore to generate the terraform name. The elements can be symbols or strings, or hashes.
-* If a hash is specified, the values will be concatenated with an underscore to generate the name. Values can be symbols or strings. A nested hash will raise an error. Hashes also set the hiera scope.
+Given a YAML file at `./hiera/common.yaml`:
 
+```yaml
+---
+ami: ami-123123
+```
 
-## Rationale
+again, produces `./terraform/nginx.tf`:
 
-Directly writing Terraform configuration files in its native HCL has severe limitations. The main one is that HCL lacks the expressive power to create reusable blocks of code, whether that be its modules or stacks. Yutani overcomes this obstacle by providing the power of ruby to generate configuration files. It can create also directory trees containing multiple stacks, and local modules. It generates JSON, which terraform also supports (There is no HCL generator for ruby that I know of).
+```hcl
+resource "aws_instance" "nginx" {
+	ami           = "ami-123123"
+	instance_type = "t2.micro"
+	key_name      = "my-ssh-key"
+}
+```
 
-## Resource
+## Usage
 
-A Resource object represents an individual Terraform resource.
+### Stack
 
-## Modules
+A stack object creates a directory containing Terraform configuration. This is the same directory from which you'd run commands like `terraform plan` and `terraform apply`. It takes two optional parameters: 
 
-A Module object maps to a Terraform module. As well as supporting all th usual source parameters, it can also be used to both create both a local directory of configuration files and the reference to it.
+* _identifiers_ - one or more symbols
+* _hiera scope_ - a single level hash
 
-## Stack
+For example:
 
-A Stack object generates a directory of configuration files and/or  directories of local modules.
+```ruby
+stack(:mystack, env: 'dev', region: 'eu-west-1')
+```
 
-## Dependencies
+Has an identifier `:mystack`, and a hiera scope `{env: 'dev', region: 'eu-west-1'}`.
 
-Terraform dependencies 
+The hiera scope determines which variables are looked up. 
 
-# Notes
+Identifiers and hiera scope values together determine the stack name. In this case the stack directory would be:
 
-* blocks and hashes can be used interchangely for sub-resources
+```
+./terraform/mystack_dev_eu_west_1
+```
+
+### Resource
+
+A resource maps to a Terraform resource. However, it only takes one parameter:
+
+* _resource type_ - the type of resource, i.e. `aws_instance`
+
+The resource name is inherited from its scope, following these rules:
+
+* Resources at the stack level inherit the first stack identifier. If no identifiers are defined, it's set to `root`.
+* Resources within a scope are named according to the scope's identifiers and hiera scope values. Stack identfiers and hiera scope values are *not* used.
+* Resources within a nested scope inherit identifiers and hiera scope values from each and every nested scope. Stack identfiers and hiera scope values are *not* used.
+
+For example:
+
+```
+stack(:mystack) {
+	scope(:public) {
+		scope(az: 'eu-west-1a') {
+			resource :aws_subnet
+		}
+	}
+}
+```
+
+The `aws_subnet` resource would be named `public_eu_west_1a`. (Note: any hyphens are converted to underscores).
+
+## Style
+
+I've opted for using `{}` instead of `do; end` for the blocks in the examples. Either can of course be used, but I wanted to convey the similarity to HCL, which uses curly brackets.
+
+## Notes
+
+* Either blocks and hashes can be used for sub-resources (i.e. `tags` in `aws_instance`, or `listener` in `aws_elb`
 * `{}` and `({})` for property values, represent blocks and hashes respectively
-* Resource property names can clash with ruby method names, i.e. `timeout 60` in an `aws_elb`'s health check will actually call Object.timeout in ruby. To get around this, prefix the name with an underscore, i.e. `_timeout 60`, and Yutani will remove the underscore after evaluation. (This is to do with Yutani relying on something called `method_missing` in ruby, whereby all unknown method calls are instead coverted to resource property names. This won't work alas in the case just talked about!).
+* Makes heavy use of ruby's `method_missing`. Basically, Yutani knows nothing of which providers and resources are possible, it just converts the resource property names to methods, and passes the property values as parameters. While this means Yutani doesn't have to keep track of the continual changes to Terraform's resources, it does make it more brittle than I'd like. For instance, the resource `aws_security_group_rule` has a property called `self`, which is of course also a ruby keyword, and if it is defined in this way it will trigger an error. To get around this, pass a parameter to your resource block like so:
+
+```ruby
+resource(:aws_security_group_rule) {|r|
+    r.type              "ingress"
+    r.from_port         22
+    r.to_port           22
+    r.protocol          "tcp"
+    r.self              true
+    r.security_group_id "sg-123456"
+}
+```
+
+Not so pretty, but you'll be alright.
+
+## Roadmap
+
+* Rewrite in golang, evaluating the ruby DSL via mruby 
+* Support Ansible, Packer, and any other tools that rely on a serialization format for configuration
+* Support for setting remote config via DSL
+* Support for files and templates. Consider whether this can be done at evaluation stage and placed inline into generated JSON
+
+## Issues that this will overcome
+
+* Unable to selectively enable SSL on an ELB
+* Add more as I think of em!
