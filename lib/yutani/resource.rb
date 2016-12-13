@@ -10,7 +10,7 @@ module Yutani
       @scope              = HashWithIndifferentAccess.new(scope)
       @fields             = {}
 
-      instance_eval &block if block_given?
+      Docile.dsl_eval(self, &block) if block_given?
     end
 
     def []=(k,v)
@@ -25,8 +25,8 @@ module Yutani
       }
     end
 
-    def ref(m='.', t, n, a)
-      Reference.new(m, t, n, a)
+    def ref(*identifiers, t, a)
+      Reference.new(*identifiers, t, a)
     end
 
     def resolve_references!(&block)
@@ -34,16 +34,20 @@ module Yutani
         case v
         when Reference
           @fields[k] = yield v
-        when SubResource
-          v.fields.each do |k,v|
-            if v.is_a? Reference
-              v.fields[k] = yield v
+        when Hash
+          v.each do |sub_k,sub_v|
+            if sub_v.is_a? Reference
+              v[sub_k] = yield sub_v
             end
           end
         else
           next
         end
       end
+    end
+
+    def respond_to_missing?(method_name, include_private = false)
+      true
     end
 
     def method_missing(name, *args, &block)

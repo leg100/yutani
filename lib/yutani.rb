@@ -1,6 +1,7 @@
 require 'hiera'
 require 'hashie'
 require 'logger'
+require 'docile'
 require 'yutani/version'
 require 'yutani/config'
 require 'yutani/hiera'
@@ -8,7 +9,6 @@ require 'yutani/cli'
 require 'yutani/dsl_entity'
 require 'yutani/reference'
 require 'yutani/directory_tree'
-require 'yutani/mod'
 require 'yutani/stack'
 require 'yutani/resource'
 require 'yutani/provider'
@@ -19,7 +19,7 @@ module Yutani
   @stacks = []
 
   class << self
-    attr_accessor :hiera, :stacks, :logger, :entry_path
+    attr_accessor :hiera, :stacks, :logger
   end
 
   class << self
@@ -31,8 +31,8 @@ module Yutani
       )
     end
 
-    def stack(name, **scope, &block)
-      s = Stack.new(name, **scope, &block)
+    def stack(*identifiers, **scope, &block)
+      s = Stack.new(*identifiers, **scope, &block)
       @stacks << s
       s
     end
@@ -47,14 +47,18 @@ module Yutani
       Config.from(config.merge(override))
     end
 
-    def build_from_file(file)
-      Yutani.entry_path = file
+    def dsl_eval(str, *args, &block)
+      Docile.dsl_eval(self, *args, &block)
+    end
 
-      instance_eval(File.read(file), file)
-
-      unless stacks.empty?
-        stacks.each {|s| s.to_fs}
+    def eval_string(*args, str, file)
+      dsl_eval(str, *args, file) do
+        instance_eval(str, file)
       end
+    end
+
+    def eval_file(*args, file)
+      eval_string(File.read(file), file)
     end
   end
 end

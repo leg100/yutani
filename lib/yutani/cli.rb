@@ -21,7 +21,11 @@ module Yutani
 
     desc 'build', 'Evaluates the given script and creates terraform files'
     def build(script)
-      Yutani.build_from_file(script)
+      Yutani.eval_file(script)
+
+      unless Yutani.stacks.empty?
+        Yutani.stacks.each {|s| s.to_fs}
+      end
     end
 
     # we need to know these things:
