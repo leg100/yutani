@@ -25,18 +25,19 @@ module Yutani
       eval File.read(path), block.binding, path
     end
 
-    def resource(resource_type, &block)
-      @stack.resources[resource_type][@dimensions] =
-        Resource.new(resource_type, resource_name, @hiera_scope, &block)
+    def resource(resource_type, *resource_names, **hiera_scope, &block)
+      dimensions = @dimensions.
+        union(resource_names.map(&:to_sym)).
+        union(hiera_scope.values.map(&:to_sym))
+
+      hiera_scope = @hiera_scope.merge(hiera_scope)
+	
+      @stack.resources[resource_type][dimensions] =
+        Resource.new(resource_type, dimensions, hiera_scope, &block)
     end
 
     def provider(provider_name, &block)
       @stack.providers << Provider.new(provider_name, @hiera_scope, &block)
-    end
-
-    private
-    def resource_name
-      @dimensions.empty? ? 'default' : @dimensions.to_a.join('_')
     end
   end
 end

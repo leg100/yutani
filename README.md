@@ -111,11 +111,13 @@ Identifiers and hiera scope values together determine the stack name. In this ca
 
 ### Resource
 
-A resource maps to a Terraform resource. However, it only takes one parameter:
+A resource maps to a Terraform resource. It takes two parameters:
 
-* _resource type_ - the type of resource, i.e. `aws_instance`
+* _resource type_ - mandatory, i.e. `aws_instance`
+* _identifiers_ - optional array of symbols or strings
+* _hiera scope_ - hiera scope hash
 
-The resource name is inherited from its scope, following these rules:
+The resource name is constructed from both a resource's identifiers and the hiera scope values, as well as those of the scopes under which it falls, following these rules:
 
 * Resources at the stack level inherit the first stack identifier. If no identifiers are defined, it's set to `root`.
 * Resources within a scope are named according to the scope's identifiers and hiera scope values. Stack identfiers and hiera scope values are *not* used.
@@ -127,13 +129,13 @@ For example:
 stack(:mystack) {
 	scope(:public) {
 		scope(az: 'eu-west-1a') {
-			resource :aws_subnet
+			resource(:aws_subnet, :spare)
 		}
 	}
 }
 ```
 
-The `aws_subnet` resource would be named `public_eu_west_1a`. (Note: any hyphens are converted to underscores).
+The `aws_subnet` resource would be named `public_eu_west_1a_spare`. (Note: any hyphens are converted to underscores).
 
 ### Includes
 

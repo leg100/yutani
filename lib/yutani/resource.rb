@@ -1,11 +1,11 @@
 module Yutani
   class Resource < DSLEntity
-    attr_accessor :resource_type, :resources, :fields, :mods, :resource_name
+    attr_accessor :resource_type, :fields, :resource_name
 
-    def initialize(resource_type, resource_name, **scope, &block)
+    def initialize(resource_type, dimensions, hiera_scope, &block)
       @resource_type      = resource_type
-      @resource_name      = resource_name
-      @scope              = scope
+      @resource_name      = dimensions.to_a.join('_')
+      @scope              = hiera_scope
       @fields             = {}
 
       Docile.dsl_eval(self, &block) if block_given?
