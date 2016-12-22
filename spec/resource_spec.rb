@@ -5,23 +5,18 @@ describe Yutani::Resource do
     Yutani::Hiera.hiera('hiera_config_file' => 'spec/hiera.yaml')
 
     @stack = Yutani.stack(:s1) {
-      scope(:rnameA) {
-        resource(:rtype, :x, y: 'a') {
-          propZ hiera(:foo)
-        }
+      resource(:rtype, :rnameA) {
+        propZ hiera(:foo)
       }
     }
-    @resource_id = Set.new(%i[rnameA x a])
+    @resource = @stack.resources.last
   end
 
   it "has a populated resources collection" do
-    expect(@stack.resources).to be_instance_of(Hash)
-    expect(@stack.resources[:rtype]).to be_instance_of(Hash)
-    expect(@stack.resources[:rtype].keys.first).to eq @resource_id
+    expect(@stack.resources).to be_instance_of(Array)
   end
 
   it "should resolve hiera variables correctly" do
-    resource = @stack.resources[:rtype][@resource_id]
-    expect(resource.fields[:propZ]).to eq 'bar'
+    expect(@resource.fields[:propZ]).to eq 'bar'
   end
 end

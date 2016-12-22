@@ -9,10 +9,8 @@ require 'yutani/config'
 require 'yutani/hiera'
 require 'yutani/cli'
 require 'yutani/dsl_entity'
-require 'yutani/reference'
 require 'yutani/directory_tree'
 require 'yutani/stack'
-require 'yutani/scope'
 require 'yutani/resource'
 require 'yutani/provider'
 require 'yutani/utils'
@@ -34,8 +32,13 @@ module Yutani
       )
     end
 
-    def stack(*identifiers, **scope, &block)
-      s = Stack.new(*identifiers, **scope, &block)
+    # DSL statement
+    def stack(*namespace, **scope, &block)
+      s = Stack.new(*namespace, **scope)
+
+      # we're in a DSL context, so treat block specially (implicit self=stack, etc)
+      Docile.dsl_eval(s, s, &block)
+
       @stacks << s
       s
     end

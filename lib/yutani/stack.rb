@@ -2,34 +2,51 @@ require 'json'
 
 module Yutani
   class Stack
-    attr_accessor :name, :resources, :providers, :outputs, :variables
+    attr_accessor :resources, :providers, :outputs, :variables
 
-    def initialize(*identifiers, **hiera_scope, &block)
-      @resources         = Hash.new{|h,k| h[k] = {}}
-      @providers         = []
-      @outputs           = {}
-      @variables         = {}
-      @hiera_scope       = hiera_scope
+    def initialize(*namespace, **hiera_scope, &block)
+      @resources   = []
+      @providers   = []
+      @outputs     = {}
+      @variables   = {}
+      @hiera_scope = hiera_scope
+      @namespace   = namespace
 
-      @dimensions        = identifiers + hiera_scope.values
-
-      Scope.new(stack:       self,
-                hiera_scope: hiera_scope,
-                dimensions:  Set.new([]),
-                yielding:    @dimensions,
-                &block)
+      yield self if block_given?
     end
 
     def name
-      @dimensions.join('_')
+      @namespace.join('_')
+    end
+
+    def scope=(scope)
+      @hiera_scope.merge!(scope)
+    end
+
+    def resource(resource_type, *namespace, &block)
+      @resources <<
+        Resource.new(resource_type, *namespace, **@hiera_scope, &block)
+    end
+
+    def provider(name, &block)
+      @providers <<
+        Provider.new(name, &block)
+    end
+
+    # troposphere-like methods
+    def add_resource(resource)
+      @resources << resource
+    end
+
+    def add_provider(provider)
+      @providers << provider
     end
 
     # this generates the contents of *.tf.main
     def to_h
       h = { 
-        resource: @resources.inject(DeepMergeHash.new){|resources,(_, r_id_hash)|
-          r_id_hash.values.each {|r| resources.deep_merge!(r.to_h) }
-          resources
+        resource: @resources.inject(DeepMergeHash.new){|resources,r|
+          resources.deep_merge!(r.to_h)
         },
         provider: @providers.inject(DeepMergeHash.new){|providers,r|
           providers.deep_merge(r.to_h)
@@ -52,62 +69,17 @@ module Yutani
       JSON.pretty_generate(to_h)
     end
 
-    def resources_array
-      # iron out nested hash into an array.
-      # don't flatten recursively! otherwise it does
-      # strange things to hashes
-      @resources.values.map(&:values).flatten(1)
-    end
-
-    class ReferenceException < StandardError; end
-
-    def resolve_references!
-      resources_array.each do |r|
-        r.resolve_references! do |ref|
-
-          matches = @resources[ref.resource_type].select do |identifiers, r|
-            # is the references' identifiers a subset of the resources' identifiers?
-            ref.identifiers.subset? identifiers
-            # if so, return the resource objects
-          end.values
-
-          if matches.empty?
-            binding.pry
-            raise ReferenceException, 
-              "no matching resources found with dimensions #{ref.identifiers.to_a.join(',')}" +
-                " and type #{ref.resource_type}"
-          end
-
-          interpolation_strings = matches.map do |res|
-            "${%s}" % [res.resource_type, res.resource_name, ref.attr].join('.')
-          end
-
-          # this needs working on - because one result is returned, doesn't necessarily
-          # mean the user wasn't expecting it to be encapsulated in an array.
-          # (TF expects certain property values to be arrays)
-          interpolation_strings.length == 1 ? interpolation_strings[0] : 
-            interpolation_strings
-        end
-      end
-    end
-
     def dir_path
       name
     end
 
     def tar(filename)
-      # ideally, this needs to be done automatically as part of to_h
-      resolve_references!
-
       File.open(filename, 'w+') do |tarball|
         create_dir_tree('./').to_tar(tarball)
       end
     end
 
     def to_fs(prefix='./terraform')
-      # ideally, this needs to be done automatically as part of to_h
-      resolve_references!
-
       create_dir_tree(prefix).to_fs
     end
 
