@@ -2,8 +2,6 @@ require 'thor'
 require 'json'
 require 'pp'
 require 'yaml'
-require 'guard'
-require 'guard/commander'
 
 module Yutani
   class Cli < Thor
@@ -36,16 +34,11 @@ module Yutani
     # * the glob  - this is hardcoded to *.rb
     desc 'watch', 'Run build upon changes to files/directories'
     def watch(script, script_dir)
-			guardfile = <<-EOF
-run_build = proc do
-  system("yutani build #{script}")
-end
+      Listen.to(script_dir) do |_, _, _|
+        build(script)
+      end.start
 
-guard :yield, { :run_on_modifications => run_build } do
-  watch(%r|^.*\.rb$|)
-end
-EOF
-      Guard.start(guardfile_contents: guardfile, watchdir: script_dir, debug: true)
+      sleep
     end
 
     desc 'version', 'Prints the current version of Yutani'

@@ -24,9 +24,9 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency 'hiera', '~> 3.2', '>= 3.2.1'
   s.add_runtime_dependency 'thor', '~> 0.19.1'
   s.add_runtime_dependency 'docile', '~> 1.1', '>= 1.1.5'
-  s.add_runtime_dependency 'guard', '~> 2.14.0'
-  s.add_runtime_dependency 'guard-yield'
+  s.add_runtime_dependency 'listen', '~> 3.1', '>= 3.1.5'
 
   s.add_development_dependency 'rake'
   s.add_development_dependency 'aruba', '~> 0.14.2'
+  s.add_development_dependency 'guard', '~> 2.14.0'
 end
