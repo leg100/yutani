@@ -1,3 +1,3 @@
 module Yutani
-  VERSION = '0.0.8.next1'
+  VERSION = '0.0.8.next2'
 end
