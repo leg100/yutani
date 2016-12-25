@@ -49,6 +49,13 @@ module Yutani
     desc 'target', 'Generate list of Terraform targets'
     def target(stack_dir, *args)
       files = Dir.glob(File.join(stack_dir, '*.tf.json'))
+      if files.empty?
+        raise "Could not find *.tf.json files in #{stack_dir}"
+      end
+
+      if args.empty?
+        raise "No targets specified"
+      end
 
       contents = files.inject({}) do |h, f|
         h.merge!(JSON.parse(File.read(f)))
