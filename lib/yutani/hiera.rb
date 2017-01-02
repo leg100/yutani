@@ -1,8 +1,30 @@
 require 'hiera'
 
+# say something about the purpose of this wrapper, for instance
+# the way in which yutani maintains a stack of hiera scopes and
+# then merges them when a lookup occurs
 module Yutani
   module Hiera
+    @scopes = []
+
     class << self
+      attr_accessor :hiera, :scopes
+
+      def scope
+        @scopes.inject({}){|h,scope| h.merge(scope) }
+      end
+
+      def push(kv)
+        # hiera doesn't accept symbols for scope keys or values
+        @scopes.push Yutani::Utils.convert_symbols_to_strings_in_flat_hash(kv)
+
+        Yutani.logger.debug "hiera scope: %s" % scope
+      end
+
+      def pop
+        @scopes.pop
+      end
+
       def hiera(config_override={})
         @hiera ||= init_hiera(config_override)
       end
@@ -16,15 +38,14 @@ module Yutani
         )
       end
 
-      def lookup(k, scope)
-        # hiera expects strings, not symbols
-        hiera_scope = scope.inject({}){|h,(k,v)| h[k.to_s] = v.to_s; h}
-        Yutani.logger.debug "hiera scope: %s" % hiera_scope
+      def lookup(k)
 
-        v = Yutani::Hiera.hiera.lookup(k.to_s, nil, hiera_scope)
+        # hiera expects key to be a string
+        v = hiera.lookup(k.to_s, nil, scope)
+
         Yutani.logger.warn "hiera couldn't find value for key #{k}" if v.nil?
 
-        # let us use symbols for hash keys
+        # if nested hash, let user lookup nested keys with strings or symbols
         Yutani::Utils.convert_nested_hash_to_indifferent_access(v)
       end
     end

@@ -2,6 +2,7 @@ require 'hashie'
 
 module Yutani
 	class IndifferentHash < Hash
+    include Hashie::Extensions::MergeInitializer
 		include Hashie::Extensions::IndifferentAccess
 	end
 
@@ -11,6 +12,15 @@ module Yutani
 
   module Utils
     class << self
+      def convert_symbols_to_strings_in_flat_hash(h)
+        h.inject({}) do |h, (k,v)|
+          k = k.is_a?(Symbol) ? k.to_s : k
+          v = v.is_a?(Symbol) ? v.to_s : v
+          h[k] = v
+          h
+        end
+      end
+
       def convert_nested_hash_to_indifferent_access(v)
         case v
         when Array

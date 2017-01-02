@@ -4,6 +4,8 @@ module Yutani
 
     # Strings rather than symbols are used for compatibility with YAML.
     DEFAULTS = Config[{
+      "scripts_dir" => "scripts",
+      "includes_dir" => "includes",
       "terraform_dir" => "terraform",
       "hiera_config"  => {
         :backends  => ["yaml"],

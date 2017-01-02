@@ -2,10 +2,9 @@ module Yutani
   class Resource < DSLEntity
     attr_accessor :resource_type, :namespace, :fields
 
-    def initialize(resource_type, *namespace, **hiera_scope, &block)
+    def initialize(resource_type, *namespace, &block)
       @resource_type      = resource_type
       @namespace          = namespace
-      @scope              = hiera_scope.merge({ component: namespace.first })
       @fields             = {}
 
       Docile.dsl_eval(self, &block) if block_given?
@@ -13,10 +12,6 @@ module Yutani
 
     def resource_name
       @namespace.join('_')
-    end
-
-    def []=(k,v)
-      @fields[k] = v
     end
 
     def to_h
@@ -41,7 +36,7 @@ module Yutani
         ref(*args, $1)
       elsif block_given?
         # handle sub resources, like tags, listener, etc
-        sub = SubResource.new(scope)
+        sub = SubResource.new
         sub.instance_exec(&block)
         @fields[name] = sub.fields
       else
@@ -51,8 +46,7 @@ module Yutani
   end
 
   class SubResource < Resource 
-    def initialize(scope)
-      @scope  = scope
+    def initialize
       @fields = {}
     end
   end

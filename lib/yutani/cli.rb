@@ -19,9 +19,18 @@ module Yutani
       end
     end
 
-    desc 'build', 'Evaluates the given script and creates terraform files'
-    def build(script)
-      Yutani.eval_file(script)
+    desc 'build', 'Evaluates DSL scripts and creates terraform files'
+    def build
+      scripts_dir = Yutani::Config::DEFAULTS['scripts_dir']
+
+      files = Dir.glob(File.join(scripts_dir, '*.rb'))
+      if files.empty?
+        raise "Could not find any scripts in '#{scripts_dir}'"
+      end
+
+      files.each do |script|
+        Yutani.eval_file(script)
+      end
 
       unless Yutani.stacks.empty?
         Yutani.stacks.each {|s| s.to_fs}
@@ -32,9 +41,9 @@ module Yutani
     # * the directory to restrict to watching for changes
     # * the script that build should evaluate 
     # * the glob  - this is hardcoded to *.rb
-    desc 'watch', 'Run build upon changes to files/directories'
-    def watch(script, script_dir)
-      Listen.to(script_dir) do |_, _, _|
+    desc 'watch', 'Run build upon changes to scripts'
+    def watch
+      Listen.to(config[:script_dir]) do |_, _, _|
         build(script)
       end.start
 
@@ -92,6 +101,18 @@ module Yutani
         File.open('.yutani.yml', 'w+') do |f|
           f.write Yutani::Config::DEFAULTS.to_yaml(indent: 2)
           puts ".yutani.yml created"
+        end
+
+        unless Dir.exists? Yutani::Config::DEFAULTS['terraform_dir']
+          FileUtils.mkdir Yutani::Config::DEFAULTS['terraform_dir']
+        end
+
+        unless Dir.exists? Yutani::Config::DEFAULTS['scripts_dir']
+          FileUtils.mkdir Yutani::Config::DEFAULTS['scripts_dir']
+        end
+
+        unless Dir.exists? Yutani::Config::DEFAULTS['includes_dir']
+          FileUtils.mkdir Yutani::Config::DEFAULTS['includes_dir']
         end
 
         hiera_dir = Yutani::Config::DEFAULTS['hiera_config'][:yaml][:datadir]

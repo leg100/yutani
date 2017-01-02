@@ -1,6 +1,5 @@
 begin; require 'pry'; rescue LoadError; end
 
-require 'set'
 require 'logger'
 require 'docile'
 
@@ -16,29 +15,23 @@ require 'yutani/provider'
 require 'yutani/utils'
 
 module Yutani
-
   @stacks = []
 
   class << self
+    # do we need :logger?
     attr_accessor :hiera, :stacks, :logger
-  end
 
-  class << self
     def logger
       @logger ||= (
-        logger = Logger.new(STDOUT)
+        logger = Logger.new(STDERR)
         logger.level = Logger.const_get(ENV.fetch('LOG_LEVEL', 'INFO'))
         logger
       )
     end
 
     # DSL statement
-    def stack(*namespace, **scope, &block)
-      s = Stack.new(*namespace, **scope)
-
-      # we're in a DSL context, so treat block specially (implicit self=stack, etc)
-      Docile.dsl_eval(s, s, &block)
-
+    def stack(*namespace, &block)
+      s = Stack.new(*namespace, &block)
       @stacks << s
       s
     end
@@ -51,6 +44,12 @@ module Yutani
 
       # Merge DEFAULTS < .yutani.yml < override
       Config.from(config.merge(override))
+    end
+
+    def scope(**kv, &block)
+      Hiera.push kv
+      yield kv.values
+      Hiera.pop
     end
 
     def dsl_eval(str, *args, &block)

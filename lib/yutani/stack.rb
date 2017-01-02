@@ -1,31 +1,26 @@
 require 'json'
 
 module Yutani
-  class Stack
+  class Stack < DSLEntity
     attr_accessor :resources, :providers, :outputs, :variables
 
-    def initialize(*namespace, **hiera_scope, &block)
+    def initialize(*namespace, &block)
       @resources   = []
       @providers   = []
       @outputs     = {}
       @variables   = {}
-      @hiera_scope = hiera_scope
       @namespace   = namespace
 
-      yield self if block_given?
+      Docile.dsl_eval(self, &block) if block_given?
     end
 
     def name
       @namespace.join('_')
     end
 
-    def scope=(scope)
-      @hiera_scope.merge!(scope)
-    end
-
     def resource(resource_type, *namespace, &block)
       @resources <<
-        Resource.new(resource_type, *namespace, **@hiera_scope, &block)
+        Resource.new(resource_type, *namespace, &block)
     end
 
     def provider(name, &block)
@@ -40,6 +35,13 @@ module Yutani
 
     def add_provider(provider)
       @providers << provider
+    end
+
+    def inc(&block)
+      includes_dir = Yutani::Config::DEFAULTS['includes_dir']
+      path = File.join(includes_dir, yield)
+
+      eval File.read(path), block.binding, path
     end
 
     # this generates the contents of *.tf.main

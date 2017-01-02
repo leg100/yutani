@@ -1,0 +1,14 @@
+---
+:backends:
+  - yaml
+
+:hierarchy:
+  - '%{env}/regions/%{region}'
+  - '%{env}/%{component}'
+  - '%{env}/common'
+  - common
+
+:yaml:
+  :datadir: ./hieradata
+
+:logger: noop

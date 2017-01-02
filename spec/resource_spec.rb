@@ -2,21 +2,30 @@ require 'yutani'
 
 describe Yutani::Resource do
   before do 
-    Yutani::Hiera.hiera('hiera_config_file' => 'spec/hiera.yaml')
-
-    @stack = Yutani.stack(:s1) {
-      resource(:rtype, :rnameA) {
-        propZ hiera(:foo)
+    @resource = Yutani::Resource.new(:rtype, :rname, :rname2) do
+      propA   'valA'
+      subProp {
+        propB 'valB'
       }
-    }
-    @resource = @stack.resources.last
+      propC   ref_id(:rtypeZ, :rnameZ)
+    end
   end
 
-  it "has a populated resources collection" do
-    expect(@stack.resources).to be_instance_of(Array)
+  it "has a resource name" do
+    expect(@resource.resource_name).to eq "rname_rname2"
   end
 
-  it "should resolve hiera variables correctly" do
-    expect(@resource.fields[:propZ]).to eq 'bar'
+  it "spits out a valid hash" do
+    expect(@resource.to_h).to eq({
+      rtype: {
+        'rname_rname2' => {
+          propA: 'valA',
+          subProp: {
+            propB: 'valB'
+          },
+          propC: '${rtypeZ.rnameZ.id}'
+        }
+      }
+    })
   end
 end
