@@ -20,6 +20,11 @@ describe Yutani::Hiera do
     expect(Yutani::Hiera.lookup(:foo)).to eq 'bar'
   end
 
+  it "should lookup non-existent key in hiera and raise error" do
+    expect{ Yutani::Hiera.lookup(:phong) }.to raise_error(
+      Yutani::Hiera::NonExistentKeyException)
+  end
+
   it "should build a nested scope" do
     expect(@scope).to eq({
       'a' => 1,

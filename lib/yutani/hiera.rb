@@ -5,6 +5,8 @@ require 'hiera'
 # then merges them when a lookup occurs
 module Yutani
   module Hiera
+    class NonExistentKeyException < StandardError; end
+
     @scopes = []
 
     class << self
@@ -43,7 +45,7 @@ module Yutani
         # hiera expects key to be a string
         v = hiera.lookup(k.to_s, nil, scope)
 
-        Yutani.logger.warn "hiera couldn't find value for key #{k}" if v.nil?
+        raise NonExistentKeyException.new(v) if v.nil?
 
         # if nested hash, let user lookup nested keys with strings or symbols
         Yutani::Utils.convert_nested_hash_to_indifferent_access(v)
