@@ -58,11 +58,9 @@ RSpec.describe 'First Run', :type => :aruba do
     let(:common_tier)   { expand_path('%/hiera/common.yaml') }
 
     before do
-      create_directory scripts_dir
-      create_directory includes_dir
-      create_directory hiera_dir
+      cd ('.') do
+        run_simple("yutani init") # run() doesn't work?
 
-      cd('.') do
         FileUtils.cp stacks_rb,   'scripts/stacks.rb'
         FileUtils.cp vpc_rb,      'includes/vpc.rb'
         FileUtils.cp common_tier, 'hiera/common.yaml'
@@ -82,9 +80,7 @@ RSpec.describe 'First Run', :type => :aruba do
     end
 
     it "builds terraform stacks" do
-      run("yutani build") do |p|
-        puts p.output
-      end
+      run("yutani build")
 
       stack_dir = File.join(terraform_dir, "dev_eu-west-1_vpc")
       main_tf_json = File.join(stack_dir, "main.tf.json")
