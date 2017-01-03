@@ -96,7 +96,7 @@ module Yutani
     desc 'init', 'Initialize with a basic setup'
     def init
       if File.exists? '.yutani.yml'
-        puts ".yutani.yml already exists, skipping initialization"
+        Yutani.logger.warn ".yutani.yml already exists, skipping initialization"
       else
         File.open('.yutani.yml', 'w+') do |f|
           f.write Yutani::Config::DEFAULTS.to_yaml(indent: 2)
