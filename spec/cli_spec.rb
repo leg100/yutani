@@ -9,43 +9,43 @@ RSpec.describe 'First Run', :type => :aruba do
   let(:common_tier)   { 'hiera/common.yaml' }
 
   describe 'yutani version' do
-    it "prints version" do 
+    it "prints version" do
       expect(run("yutani -v")).to have_output Yutani::VERSION
     end
   end
 
   describe 'yutani init' do
-    it "initialises config file" do 
+    it "initialises config file" do
       run("yutani init")
 
       expect('.yutani.yml').to be_an_existing_file
     end
 
-    it "creates hiera data directory" do 
+    it "creates hiera data directory" do
       run("yutani init")
 
       expect(hiera_dir).to be_an_existing_directory
     end
 
-    it "creates hiera common tier" do 
+    it "creates hiera common tier" do
       run("yutani init")
 
       expect(common_tier).to be_an_existing_file
     end
 
-    it "creates scripts dir" do 
+    it "creates scripts dir" do
       run("yutani init")
 
       expect(scripts_dir).to be_an_existing_directory
     end
 
-    it "creates terraform stacks dir" do 
+    it "creates terraform stacks dir" do
       run("yutani init")
 
       expect(terraform_dir).to be_an_existing_directory
     end
 
-    it "creates includes dir" do 
+    it "creates includes dir" do
       run("yutani init")
 
       expect(includes_dir).to be_an_existing_directory
@@ -67,7 +67,7 @@ RSpec.describe 'First Run', :type => :aruba do
       end
     end
 
-    it "runs witout stderr" do
+    it "runs without stderr" do
       run("yutani build")
 
       expect(last_command_started).to have_output_on_stderr ""
@@ -87,6 +87,39 @@ RSpec.describe 'First Run', :type => :aruba do
 
       expect(stack_dir).to be_an_existing_directory
       expect(main_tf_json).to be_an_existing_file
+    end
+  end
+
+  describe 'yutani watch' do
+    let(:stacks_rb)     { expand_path('%/stacks.rb') }
+    let(:vpc_rb)        { expand_path('%/vpc.rb') }
+    let(:common_tier)   { expand_path('%/hiera/common.yaml') }
+
+    before do
+      cd ('.') do
+        run_simple("yutani init") # run() doesn't work?
+
+        FileUtils.cp stacks_rb,   'scripts/stacks.rb'
+        FileUtils.cp vpc_rb,      'includes/vpc.rb'
+        FileUtils.cp common_tier, 'hiera/common.yaml'
+
+        run("yutani watch", :startup_wait_time => 1, :io_wait_timeout => 1, :exit_timeout => 1)
+      end
+    end
+
+    # add test to check watch exits cleanly
+
+    it 'should, upon a change, trigger a build' do
+      append_to_file('scripts/stacks.rb', "\n")
+
+      sleep 1
+
+      expect(last_command_started.stderr).to  match(/modified/)
+    end
+
+    it 'should, upon a ctrl-c, exit cleanly' do
+      last_command_started.stop
+      expect(last_command_started).to have_exit_status(0)
     end
   end
 end

@@ -2,6 +2,7 @@ require 'thor'
 require 'json'
 require 'pp'
 require 'yaml'
+require 'listen'
 
 module Yutani
   class Cli < Thor
@@ -39,13 +40,26 @@ module Yutani
 
     # we need to know these things:
     # * the directory to restrict to watching for changes
-    # * the script that build should evaluate 
+    # * the script that build should evaluate
     # * the glob  - this is hardcoded to *.rb
     desc 'watch', 'Run build upon changes to scripts'
     def watch
-      Listen.to(config[:script_dir]) do |_, _, _|
-        build(script)
+      Listen.to(Yutani::Config::DEFAULTS['scripts_dir']) do |m, a, d|
+        Yutani.logger.info "Re-build triggered: #{m} modified" unless m.empty?
+        Yutani.logger.info "Re-build triggered: #{a} added" unless a.empty?
+        Yutani.logger.info "Re-build triggered: #{d} deleted" unless d.empty?
+
+        build
+
+        Yutani.logger.info "Re-build finished"
       end.start
+
+      # exit cleanly upon Ctrl-C
+      %w[INT TERM USR1].each do |sig|
+        Signal.trap(sig) do
+          exit
+        end
+      end
 
       sleep
     end
