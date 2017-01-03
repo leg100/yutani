@@ -4,10 +4,10 @@ describe Yutani::Hiera do
   before do 
     Yutani::Hiera.hiera('hiera_config_file' => 'spec/hiera.yaml')
 
-    Yutani.scope(a: 1, b: 2) do |a,b|
-      Yutani.scope(c: 3, d: 4) do |c,d|
+    Yutani.scope(a: 1, b: 2) do |s|
+      Yutani.scope(c: 3, d: 4) do |s|
         @scope = Yutani::Hiera.scope
-        @scope_values = [a,b,c,d]
+        @scope_values = s.values
       end
     end 
   end

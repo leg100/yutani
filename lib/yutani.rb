@@ -48,7 +48,10 @@ module Yutani
 
     def scope(**kv, &block)
       Hiera.push kv
-      yield kv.values
+
+      # let user use symbols or strings for keys
+      yield Yutani::IndifferentHash.new(Hiera.scope)
+
       Hiera.pop
     end
 

@@ -3,7 +3,7 @@ resource(:aws_vpc, :default) {
   enable_dns_support   true
   cidr_block           hiera(:cidr_block)
   tags                 {
-    Name              env
+    Name              s[:env]
   }
 }
 
@@ -11,7 +11,7 @@ resource(:aws_internet_gateway, :default) {
   vpc_id ref_id(:aws_vpc, :default)
 
   tags {
-    Name env
+    Name s[:env]
   }
 }
 
@@ -19,7 +19,7 @@ resource(:aws_route_table, :public){
   vpc_id ref_id(:aws_vpc, :default)
 
   tags {
-    Name [env, 'public'].join('-')
+    Name [s[:env], 'public'].join('-')
   }
 }
 
@@ -36,8 +36,8 @@ hiera(:availability_zones).each {|az, az_info|
     availability_zone       az
     map_public_ip_on_launch true
     tags                    {
-      Name        [env, az, 'public'].join('-')
-      Environment env
+      Name        [s[:env], az, 'public'].join('-')
+      Environment s[:env]
     }
   }
 
@@ -47,8 +47,8 @@ hiera(:availability_zones).each {|az, az_info|
     availability_zone       az
     map_public_ip_on_launch false
     tags                    {
-      Name        [env, az, 'private'].join('-')
-      Environment env
+      Name        [s[:env], az, 'private'].join('-')
+      Environment s[:env]
     }
   }
 
@@ -68,7 +68,7 @@ hiera(:availability_zones).each {|az, az_info|
     vpc_id ref_id(:aws_vpc, :default)
 
     tags {
-      Name [env, az, 'private'].join('-')
+      Name [s[:env], az, 'private'].join('-')
     }
   }
 
