@@ -22,7 +22,7 @@ module Yutani
 
     desc 'build', 'Evaluates DSL scripts and creates terraform files'
     def build
-      scripts_dir = Yutani::Config::DEFAULTS['scripts_dir']
+      scripts_dir = Yutani.config['scripts_dir']
 
       files = Dir.glob(File.join(scripts_dir, '*.rb'))
       if files.empty?
@@ -45,8 +45,8 @@ module Yutani
     desc 'watch', 'Run build upon changes to scripts'
     def watch
       Listen.to(
-        Yutani::Config::DEFAULTS['scripts_dir'],
-        Yutani::Config::DEFAULTS['includes_dir']
+        Yutani.config['scripts_dir'],
+        Yutani.config['includes_dir']
       ) do |m, a, d|
 
         Yutani.logger.info "Re-build triggered: #{m} modified" unless m.empty?

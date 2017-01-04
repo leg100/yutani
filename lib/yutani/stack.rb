@@ -40,15 +40,14 @@ module Yutani
     end
 
     def inc(&block)
-      includes_dir = Yutani::Config::DEFAULTS['includes_dir']
-      path = File.join(includes_dir, yield)
+      path = File.join(Yutani.config['includes_dir'], yield)
 
       eval File.read(path), block.binding, path
     end
 
     # this generates the contents of *.tf.main
     def to_h
-      h = { 
+      h = {
         resource: @resources.inject(DeepMergeHash.new){|resources,r|
           resources.deep_merge!(r.to_h)
         },
