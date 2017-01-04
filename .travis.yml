@@ -4,9 +4,6 @@ before_script:
 - mkdir -p bin
 - unzip -d bin terraform_0.7.13_linux_amd64.zip
 - export PATH=$PWD/bin:$PATH
-branches:
-  only:
-  - master
 script:
 - bundle exec rspec
 deploy:
