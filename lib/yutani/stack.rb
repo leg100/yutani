@@ -17,7 +17,7 @@ module Yutani
     end
 
     def name
-      @namespace.join('_')
+      @namespace.to_underscored_string
     end
 
     def resource(resource_type, *namespace, &block)

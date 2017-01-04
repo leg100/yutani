@@ -13,7 +13,7 @@ module Yutani
     end
 
     def resource_name
-      @namespace.join('_')
+      @namespace.to_underscored_string
     end
 
     def to_h
@@ -25,7 +25,8 @@ module Yutani
     end
 
     def ref(resource_type, *namespace, attr)
-      "${%s}" % [resource_type, namespace.join('_'), attr].join('.')
+      "${%s}" % [resource_type, namespace.to_underscored_string, attr].
+        join('.')
     end
 
     def template(path, **kv)

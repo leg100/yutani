@@ -13,16 +13,16 @@ describe Yutani::Stack do
     end
   end
 
-  it "has a provider" do
+  it "should have provider" do
     aws_provider = @stack.providers.first
     expect(aws_provider.fields[:region]).to eq "us-east-1"
   end
 
-  it "has a stack name" do
-    expect(@stack.name).to eq "dev_us-east-1"
+  it "should have a name with hyphens converted to underscores" do
+    expect(@stack.name).to eq "dev_us_east_1"
   end
 
-  it "spits out a valid hash" do
+  it "should spit out a valid hash" do
     expect(@stack.to_h).to eq({
       resource: {
         rtype: {
@@ -44,7 +44,7 @@ describe Yutani::Stack do
       FileUtils.cd dir do
         @stack.to_fs
 
-        expect(File.exists?('./terraform/dev_us-east-1/main.tf.json')).to be true
+        expect(File.exists?('./terraform/dev_us_east_1/main.tf.json')).to be true
       end
     end
   end
@@ -54,7 +54,7 @@ describe Yutani::Stack do
       FileUtils.cd dir do
         @stack.to_fs
 
-        FileUtils.cd 'terraform/dev_us-east-1' do
+        FileUtils.cd 'terraform/dev_us_east_1' do
           expect(system("terraform validate")).to be true
         end
       end
@@ -70,7 +70,7 @@ describe Yutani::Stack do
 
         %x|tar xf test.tar > /dev/null|
 
-        expect(File.exists?('dev_us-east-1/main.tf.json')).to be true
+        expect(File.exists?('dev_us_east_1/main.tf.json')).to be true
       end
     end
   end

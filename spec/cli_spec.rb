@@ -82,7 +82,7 @@ RSpec.describe 'First Run', :type => :aruba do
     it "builds terraform stacks" do
       run("yutani build")
 
-      stack_dir = File.join(terraform_dir, "dev_eu-west-1_vpc")
+      stack_dir = File.join(terraform_dir, "dev_eu_west_1_vpc")
       main_tf_json = File.join(stack_dir, "main.tf.json")
 
       expect(stack_dir).to be_an_existing_directory

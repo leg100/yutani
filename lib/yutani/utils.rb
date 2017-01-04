@@ -1,5 +1,11 @@
 require 'hashie'
 
+class Array
+  def to_underscored_string
+    map{|n| n.to_s.gsub('-', '_') }.join('_')
+  end
+end
+
 module Yutani
 	class IndifferentHash < Hash
     include Hashie::Extensions::MergeInitializer
@@ -31,6 +37,6 @@ module Yutani
           v
         end
       end
-    end 
+    end
   end
 end
