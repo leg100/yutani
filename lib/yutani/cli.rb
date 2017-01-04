@@ -46,7 +46,8 @@ module Yutani
     def watch
       Listen.to(
         Yutani.config['scripts_dir'],
-        Yutani.config['includes_dir']
+        Yutani.config['includes_dir'],
+        Yutani.config['templates_dir']
       ) do |m, a, d|
 
         Yutani.logger.info "Re-build triggered: #{m} modified" unless m.empty?
