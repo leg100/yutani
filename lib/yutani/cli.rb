@@ -44,7 +44,11 @@ module Yutani
     # * the glob  - this is hardcoded to *.rb
     desc 'watch', 'Run build upon changes to scripts'
     def watch
-      Listen.to(Yutani::Config::DEFAULTS['scripts_dir']) do |m, a, d|
+      Listen.to(
+        Yutani::Config::DEFAULTS['scripts_dir'],
+        Yutani::Config::DEFAULTS['includes_dir']
+      ) do |m, a, d|
+
         Yutani.logger.info "Re-build triggered: #{m} modified" unless m.empty?
         Yutani.logger.info "Re-build triggered: #{a} added" unless a.empty?
         Yutani.logger.info "Re-build triggered: #{d} deleted" unless d.empty?

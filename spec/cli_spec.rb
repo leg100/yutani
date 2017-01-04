@@ -109,8 +109,16 @@ RSpec.describe 'First Run', :type => :aruba do
 
     # add test to check watch exits cleanly
 
-    it 'should, upon a change, trigger a build' do
+    it 'should, upon a change to a script, trigger a build' do
       append_to_file('scripts/stacks.rb', "\n")
+
+      sleep 1
+
+      expect(last_command_started.stderr).to  match(/modified/)
+    end
+
+    it 'should, upon a change to an include, trigger a build' do
+      append_to_file('includes/vpc.rb', "\n")
 
       sleep 1
 
