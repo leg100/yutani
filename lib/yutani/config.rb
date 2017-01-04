@@ -6,6 +6,7 @@ module Yutani
     DEFAULTS = Config[{
       "scripts_dir" => "scripts",
       "includes_dir" => "includes",
+      "templates_dir" => "templates",
       "terraform_dir" => "terraform",
       "hiera_config"  => {
         :backends  => ["yaml"],

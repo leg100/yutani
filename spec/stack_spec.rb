@@ -1,7 +1,7 @@
 require 'yutani'
 
 describe Yutani::Stack do
-  before do 
+  before do
     @stack = Yutani.stack(:dev, :'us-east-1') do
       provider(:aws) {
         region 'us-east-1'

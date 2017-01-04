@@ -9,6 +9,10 @@ module Yutani
 
     @scopes = []
 
+    def hiera(k)
+      Hiera.lookup(k)
+    end
+
     class << self
       attr_accessor :hiera, :scopes
 

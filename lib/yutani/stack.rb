@@ -1,7 +1,9 @@
 require 'json'
 
 module Yutani
-  class Stack < DSLEntity
+  class Stack
+    include Hiera
+
     attr_accessor :resources, :providers, :outputs, :variables
 
     def initialize(*namespace, &block)

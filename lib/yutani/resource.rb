@@ -1,5 +1,7 @@
 module Yutani
-  class Resource < DSLEntity
+  class Resource
+    include Hiera
+
     attr_accessor :resource_type, :namespace, :fields
 
     def initialize(resource_type, *namespace, &block)
@@ -26,6 +28,10 @@ module Yutani
       "${%s}" % [resource_type, namespace.join('_'), attr].join('.')
     end
 
+    def template(path, **kv)
+      Template.new(kv).render(path)
+    end
+
     def respond_to_missing?(method_name, include_private = false)
       true
     end
@@ -45,7 +51,7 @@ module Yutani
     end
   end
 
-  class SubResource < Resource 
+  class SubResource < Resource
     def initialize
       @fields = {}
     end

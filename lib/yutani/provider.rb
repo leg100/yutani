@@ -1,5 +1,7 @@
 module Yutani
-  class Provider < DSLEntity
+  class Provider
+    include Hiera
+
     attr_accessor :provider_name, :fields
 
     def initialize(provider_name, **scope, &block)
@@ -26,7 +28,7 @@ module Yutani
 
     def method_missing(name, *args, &block)
       if block_given?
-        raise StandardError, 
+        raise StandardError,
           "provider properties do not accept blocks as parameters"
       else
         @fields[name] = args.first
