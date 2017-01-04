@@ -134,6 +134,10 @@ module Yutani
           FileUtils.mkdir Yutani::Config::DEFAULTS['includes_dir']
         end
 
+        unless Dir.exists? Yutani::Config::DEFAULTS['templates_dir']
+          FileUtils.mkdir Yutani::Config::DEFAULTS['templates_dir']
+        end
+
         hiera_dir = Yutani::Config::DEFAULTS['hiera_config'][:yaml][:datadir]
         FileUtils.mkdir hiera_dir unless Dir.exists? hiera_dir
 
