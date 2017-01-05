@@ -1,4 +1,5 @@
 require 'json'
+require 'fileutils'
 
 module Yutani
   class Stack
@@ -7,11 +8,12 @@ module Yutani
     attr_accessor :resources, :providers, :outputs, :variables
 
     def initialize(*namespace, &block)
-      @resources   = []
-      @providers   = []
-      @outputs     = {}
-      @variables   = {}
-      @namespace   = namespace
+      @resources     = []
+      @providers     = []
+      @remote_config = nil
+      @outputs       = {}
+      @variables     = {}
+      @namespace     = namespace
 
       Docile.dsl_eval(self, &block) if block_given?
     end
@@ -28,6 +30,10 @@ module Yutani
     def provider(name, &block)
       @providers <<
         Provider.new(name, &block)
+    end
+
+    def remote_config(&block)
+      @remote_config = RemoteConfig.new(&block)
     end
 
     # troposphere-like methods
@@ -73,34 +79,18 @@ module Yutani
     end
 
     def dir_path
-      name
+      File.join(Yutani.config['terraform_dir'], name)
     end
 
-    def tar(filename)
-      File.open(filename, 'w+') do |tarball|
-        create_dir_tree('./').to_tar(tarball)
+    def to_fs
+      FileUtils.mkdir_p(dir_path)
+      FileUtils.cd(dir_path) do
+        File.open('main.tf.json', 'w+', 0644) do |f|
+          f.write pretty_json
+        end
+
+        @remote_config.execute! unless @remote_config.nil?
       end
-    end
-
-    def to_fs(prefix='./terraform')
-      create_dir_tree(prefix).to_fs
-    end
-
-    def create_dir_tree(prefix)
-      dir_tree(DirectoryTree.new(prefix), '')
-    end
-
-    def dir_tree(dt, prefix)
-      full_dir_path = File.join(prefix, self.dir_path)
-      main_tf_path = File.join(full_dir_path, 'main.tf.json')
-
-      dt.add_file(
-        main_tf_path,
-        0644,
-        self.pretty_json
-      )
-
-      dt
     end
   end
 end

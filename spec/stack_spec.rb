@@ -2,13 +2,26 @@ require 'yutani'
 
 describe Yutani::Stack do
   before do
-    @stack = Yutani.stack(:dev, :'us-east-1') do
-      provider(:aws) {
-        region 'us-east-1'
-      }
+    @yutani_dir = Dir.mktmpdir
 
-      resource(:rtype, :rname, :rname2) do
-        propA   'valA'
+    FileUtils.cd(@yutani_dir) do
+      @stack = Yutani.stack(:dev, :'us-east-1') do
+        provider(:aws) {
+          region 'us-east-1'
+        }
+
+        remote_config do
+          backend :s3
+          backend_config {
+            bucket "yutani-tf-remote-state"
+            key    "us_east_1_dev/terraform.tfstate"
+            region "us-east-1"
+          }
+        end
+
+        resource(:rtype, :rname, :rname2) do
+          propA   'valA'
+        end
       end
     end
   end
@@ -40,38 +53,48 @@ describe Yutani::Stack do
   end
 
   it "should write a directory tree out to the filesystem" do
-    Dir.mktmpdir do |dir|
-      FileUtils.cd dir do
-        @stack.to_fs
-
-        expect(File.exists?('./terraform/dev_us_east_1/main.tf.json')).to be true
-      end
+    FileUtils.cd @yutani_dir do
+      expect(File.exists?('./terraform/dev_us_east_1/main.tf.json')).to be true
     end
   end
 
   it "should pass terraform validation" do
-    Dir.mktmpdir do |dir|
-      FileUtils.cd dir do
-        @stack.to_fs
-
-        FileUtils.cd 'terraform/dev_us_east_1' do
-          expect(system("terraform validate")).to be true
-        end
+    FileUtils.cd @yutani_dir do
+      FileUtils.cd 'terraform/dev_us_east_1' do
+        expect(system("terraform validate")).to be true
       end
     end
   end
 
-  it "should tar the modules in the stack" do
-    Dir.mktmpdir do |dir|
-      FileUtils.cd dir do
-        @stack.tar("test.tar")
-
-        expect(File.exists?("test.tar")).to be true
-
-        %x|tar xf test.tar > /dev/null|
-
-        expect(File.exists?('dev_us_east_1/main.tf.json')).to be true
+  it "should generate a state file" do
+    FileUtils.cd @yutani_dir do
+      FileUtils.cd 'terraform/dev_us_east_1/.terraform' do
+        expect(File.exists?('terraform.tfstate')).to be true
       end
+    end
+  end
+
+  it "should generate a remote config" do
+    FileUtils.cd @yutani_dir do
+      FileUtils.cd 'terraform/dev_us_east_1/.terraform' do
+        state = JSON.parse(File.read('terraform.tfstate'))
+        expect(state.key?('remote')).to be true
+      end
+    end
+  end
+
+  it "should raise error if remote config command fails" do
+    FileUtils.cd(@yutani_dir) do
+      expect {
+        Yutani.stack(:dev, :'us-east-1') do
+          remote_config do
+            backend :s3
+            backend_config {
+              phaw "phoawr"
+            }
+          end
+        end
+      }.to raise_error(Yutani::TerraformCommandError)
     end
   end
 end
