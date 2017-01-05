@@ -4,6 +4,11 @@ describe Yutani::Stack do
   before do
     @yutani_dir = Dir.mktmpdir
 
+    # remote_config runs 'terraform remote config..."
+    # which throws an error if aws credentials are missing
+    ENV['AWS_ACCESS_KEY_ID']     = "XXXXXXXX"
+    ENV['AWS_SECRET_ACCESS_KEY'] = "XXXXXXXX"
+
     FileUtils.cd(@yutani_dir) do
       @stack = Yutani.stack(:dev, :'us-east-1') do
         provider(:aws) {
