@@ -32,10 +32,6 @@ module Yutani
       files.each do |script|
         Yutani.eval_file(script)
       end
-
-      unless Yutani.stacks.empty?
-        Yutani.stacks.each {|s| s.to_fs}
-      end
     end
 
     # we need to know these things:

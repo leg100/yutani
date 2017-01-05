@@ -15,11 +15,9 @@ require 'yutani/template'
 require 'yutani/utils'
 
 module Yutani
-  @stacks = []
-
   class << self
     # do we need :logger?
-    attr_accessor :hiera, :stacks, :logger
+    attr_accessor :hiera, :logger
 
     def logger
       @logger ||= (
@@ -32,7 +30,7 @@ module Yutani
     # DSL statement
     def stack(*namespace, &block)
       s = Stack.new(*namespace, &block)
-      @stacks << s
+      s.to_fs
       s
     end
 
