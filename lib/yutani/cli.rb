@@ -50,9 +50,14 @@ module Yutani
         Yutani.logger.info "Re-build triggered: #{a} added" unless a.empty?
         Yutani.logger.info "Re-build triggered: #{d} deleted" unless d.empty?
 
-        build
-
-        Yutani.logger.info "Re-build finished"
+        begin
+          build
+        rescue Exception => e
+          Yutani.logger.error "#{e.class.name} #{e.message}"
+          #Yutani.logger.error Yutani::Cli.format_backtrace(e.backtrace) unless e.backtrace.empty?
+        else
+          Yutani.logger.info "Re-build finished successfully"
+        end
       end.start
 
       # exit cleanly upon Ctrl-C
