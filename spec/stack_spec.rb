@@ -27,6 +27,10 @@ describe Yutani::Stack do
         resource(:rtype, :rname, :rname2) do
           propA   'valA'
         end
+
+        data(:dtype, :dname, :dname2) do
+          propA   'valA'
+        end
       end
     end
   end
@@ -45,6 +49,13 @@ describe Yutani::Stack do
       resource: {
         rtype: {
           'rname_rname2' => {
+            propA: 'valA'
+          }
+        }
+      },
+      data: {
+        dtype: {
+          'dname_dname2' => {
             propA: 'valA'
           }
         }

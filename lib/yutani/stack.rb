@@ -9,6 +9,7 @@ module Yutani
 
     def initialize(*namespace, &block)
       @resources     = []
+      @data          = []
       @providers     = []
       @remote_config = nil
       @outputs       = {}
@@ -25,6 +26,11 @@ module Yutani
     def resource(resource_type, *namespace, &block)
       @resources <<
         Resource.new(resource_type, *namespace, &block)
+    end
+
+    def data(data_type, *namespace, &block)
+      @data <<
+        Data.new(data_type, *namespace, &block)
     end
 
     def provider(name, &block)
@@ -56,6 +62,9 @@ module Yutani
       h = {
         resource: @resources.inject(DeepMergeHash.new){|resources,r|
           resources.deep_merge!(r.to_h)
+        },
+        data: @data.inject(DeepMergeHash.new){|data,d|
+          data.deep_merge!(d.to_h)
         },
         provider: @providers.inject(DeepMergeHash.new){|providers,r|
           providers.deep_merge(r.to_h)
