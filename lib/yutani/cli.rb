@@ -70,42 +70,26 @@ module Yutani
       puts Yutani::VERSION
     end
 
-    desc 'target', 'Generate list of Terraform targets'
-    def target(stack_dir, *args)
-      files = Dir.glob(File.join(stack_dir, '*.tf.json'))
-      if files.empty?
-        raise "Could not find *.tf.json files in #{stack_dir}"
-      end
-
-      if args.empty?
-        raise "No targets specified"
-      end
-
-      contents = files.inject({}) do |h, f|
-        h.merge!(JSON.parse(File.read(f)))
-        h
-      end
-
-      targets = contents['resource'].inject({}) do |h,(k,v)|
-        h[k] = v.select do |k,v|
-          (args - k.split('_')).empty?
+    %w(plan apply destroy).each do |tf_cmd|
+      desc tf_cmd, "Run terraform #{tf_cmd} with wildcard targets"
+      define_method tf_cmd do |*args|
+        # we only support json files
+        files = Dir.glob('*.tf.json')
+        if files.empty?
+          raise "Could not find any *.tf.json files"
         end
-        h
-      end.reject{|k,v| v.empty? }
 
-      target_flags = targets.inject([]) do |flags, (k,v)|
-        flags << v.keys.map do |resource_name|
-          "-target " + ["resource", k, resource_name].join('.')
+        # merge contents of *.tf.json files into one hash
+        contents = files.inject({}) do |h, f|
+          h.merge!(JSON.parse(File.read(f)))
+          h
         end
-        flags
-      end.flatten
 
-      puts target_flags.join(" ")
-    end
+        new_args = []
+        expand_target_wildcard_args(new_args, args, contents)
 
-    # Invoke Terraform CLI command
-    def method_missing(name, *args, &block)
-      %x/terraform #{name} #{args}/
+        Yutani::Utils.run_tf_command(tf_cmd, new_args)
+      end
     end
 
     desc 'init', 'Initialize with a basic setup'
@@ -146,6 +130,55 @@ module Yutani
     end
 
     private
+
+    # horror show, in dire need of a succint algorithm
+    def expand_target_wildcard_args(new_args, args, contents)
+      flag = args.shift
+
+      if flag == '-target'
+        target_val = args.shift
+
+        if target_val.nil?
+          raise "-target arg missing corresponding target resource"
+        end
+
+        # if no wildcard found, then pass through unaltered
+        if target_val !~ /\*/
+          new_args << '-target'
+          new_args << target_val
+          expand_target_wildcard_args(new_args, args, contents)
+        end
+
+        target_regex = Regexp.new('^' + target_val.gsub(/\*/, '.*') + '$')
+
+        tf_targets = []
+        contents['resource'].each do |resource_type,v|
+          v.each do |resource_name,_|
+            if "#{resource_type}.#{resource_name}" =~ target_regex
+              tf_targets << "#{resource_type}.#{resource_name}"
+            end
+          end
+        end
+
+        if tf_targets.empty?
+          # we didn't find any matches, so pass through unaltered and
+          # let TF throw error
+          new_args << '-target'
+          new_args << target_val
+        else
+          tf_targets.each do |target|
+            new_args << '-target'
+            new_args << target
+          end
+        end
+      elsif flag.nil?
+        return
+      else
+        new_args.push flag
+      end
+
+      expand_target_wildcard_args(new_args, args, contents)
+    end
 
     def self.format_backtrace(bt)
       "Backtrace: #{bt.join("\n   from ")}"

@@ -7,17 +7,23 @@ class Array
 end
 
 module Yutani
-	class IndifferentHash < Hash
+  class IndifferentHash < Hash
     include Hashie::Extensions::MergeInitializer
-		include Hashie::Extensions::IndifferentAccess
-	end
+    include Hashie::Extensions::IndifferentAccess
+  end
 
-	class DeepMergeHash < Hash
-		include Hashie::Extensions::DeepMerge
-	end
+  class DeepMergeHash < Hash
+    include Hashie::Extensions::DeepMerge
+  end
 
   module Utils
     class << self
+      def run_tf_command(cmd, *args)
+        command = ENV.fetch('TERRAFORM', 'terraform') + ' ' + cmd + ' ' + args.join(' ')
+        Yutani.logger.info command
+        exec(command)
+      end
+
       def convert_symbols_to_strings_in_flat_hash(h)
         h.inject({}) do |h, (k,v)|
           k = k.is_a?(Symbol) ? k.to_s : k
